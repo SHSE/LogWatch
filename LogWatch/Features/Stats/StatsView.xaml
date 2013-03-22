@@ -1,0 +1,129 @@
+﻿<UserControl
+    x:Class="LogWatch.Features.Stats.StatsView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:ei="clr-namespace:Microsoft.Expression.Interactivity.Core;assembly=Microsoft.Expression.Interactions"
+    xmlns:feature="clr-namespace:LogWatch.Features.Stats"
+    xmlns:i="clr-namespace:System.Windows.Interactivity;assembly=System.Windows.Interactivity"
+    xmlns:local="clr-namespace:LogWatch"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    d:DesignHeight="300"
+    d:DesignWidth="300"
+    mc:Ignorable="d">
+
+    <UserControl.DataContext>
+        <feature:StatsViewModel InfoDialog="{x:Static local:App.InfoDialog}" LogSourceInfo="{x:Static local:App.SourceInfo}" />
+    </UserControl.DataContext>
+
+    <Grid>
+        <VisualStateManager.VisualStateGroups>
+            <VisualStateGroup>
+                <VisualState Name="Collecting">
+                    <Storyboard>
+                        <ObjectAnimationUsingKeyFrames Storyboard.TargetName="Stats" Storyboard.TargetProperty="Visibility">
+                            <DiscreteObjectKeyFrame Value="{x:Static Visibility.Visible}" />
+                        </ObjectAnimationUsingKeyFrames>
+                        <ObjectAnimationUsingKeyFrames Storyboard.TargetName="CollectButton" Storyboard.TargetProperty="Visibility">
+                            <DiscreteObjectKeyFrame Value="{x:Static Visibility.Collapsed}" />
+                        </ObjectAnimationUsingKeyFrames>
+                    </Storyboard>
+                </VisualState>
+            </VisualStateGroup>
+        </VisualStateManager.VisualStateGroups>
+
+        <i:Interaction.Triggers>
+            <i:EventTrigger EventName="Loaded">
+                <i:Interaction.Behaviors>
+                    <ei:ConditionBehavior>
+                        <ei:ConditionalExpression>
+                            <ei:ComparisonCondition LeftOperand="{Binding IsColllecting}" RightOperand="True" />
+                        </ei:ConditionalExpression>
+                    </ei:ConditionBehavior>
+                </i:Interaction.Behaviors>
+
+                <ei:GoToStateAction StateName="Collecting" />
+            </i:EventTrigger>
+
+            <ei:DataTrigger Binding="{Binding IsColllecting}" Value="True">
+                <ei:GoToStateAction StateName="Collecting" />
+            </ei:DataTrigger>
+        </i:Interaction.Triggers>
+
+        <Button
+            x:Name="CollectButton"
+            Margin="0"
+            BorderThickness="0"
+            Command="{Binding CollectCommand}"
+            Content="click here to collect statistics">
+            <Button.Style>
+                <Style BasedOn="{StaticResource {x:Type Button}}" TargetType="Button">
+                    <Setter Property="Background" Value="Transparent" />
+                </Style>
+            </Button.Style>
+        </Button>
+
+        <StackPanel
+            x:Name="Stats"
+            Orientation="Horizontal"
+            Visibility="Collapsed">
+
+            <StackPanel.Resources>
+                <Style BasedOn="{StaticResource {x:Type Button}}" TargetType="Button">
+                    <Setter Property="Background" Value="Transparent" />
+                    <Setter Property="BorderThickness" Value="0" />
+                    <Setter Property="Margin" Value="0" />
+                    <Setter Property="Padding" Value="3,0,3,0" />
+                    <Setter Property="MinWidth" Value="45" />
+                    <!--  <Setter Property="FontFamily" Value="Consolas" />  -->
+                    <Setter Property="VerticalContentAlignment" Value="Center" />
+                </Style>
+            </StackPanel.Resources>
+
+            <Button
+                Command="{Binding GoToNextCommand}"
+                CommandParameter="{x:Static local:LogLevel.Trace}"
+                Foreground="{StaticResource LogLevelTrace}"
+                ToolTip="Go to next Trace record">
+                <TextBlock Text="{Binding TraceCount, StringFormat='{}{0:#,#}'}" />
+            </Button>
+            <Button
+                Command="{Binding GoToNextCommand}"
+                CommandParameter="{x:Static local:LogLevel.Debug}"
+                Foreground="{StaticResource LogLevelDebug}"
+                ToolTip="Go to next Debug record">
+                <TextBlock Text="{Binding DebugCount, StringFormat='{}{0:#,#}'}" />
+            </Button>
+            <Button
+                Command="{Binding GoToNextCommand}"
+                CommandParameter="{x:Static local:LogLevel.Info}"
+                Foreground="{StaticResource LogLevelInfo}"
+                ToolTip="Go to next Info record">
+                <TextBlock Text="{Binding InfoCount, StringFormat='{}{0:#,#}'}" />
+            </Button>
+            <Button
+                Command="{Binding GoToNextCommand}"
+                CommandParameter="{x:Static local:LogLevel.Warn}"
+                Foreground="{StaticResource LogLevelWarn}"
+                ToolTip="Go to next Warn record">
+                <TextBlock Text="{Binding WarnCount, StringFormat='{}{0:#,#}'}" />
+            </Button>
+            <Button
+                Command="{Binding GoToNextCommand}"
+                CommandParameter="{x:Static local:LogLevel.Error}"
+                Foreground="{StaticResource LogLevelError}"
+                ToolTip="Go to next Error record">
+                <TextBlock Text="{Binding ErrorCount, StringFormat='{}{0:#,#}'}" />
+            </Button>
+            <Button
+                Command="{Binding GoToNextCommand}"
+                CommandParameter="{x:Static local:LogLevel.Fatal}"
+                ToolTip="Go to next Fatal record">
+                <TextBlock
+                    Background="{StaticResource LogLevelFatal}"
+                    Foreground="Black"
+                    Text="{Binding FatalCount, StringFormat='{}{0:#,#}'}" />
+            </Button>
+        </StackPanel>
+    </Grid>
+</UserControl>

@@ -1,0 +1,284 @@
+﻿<ResourceDictionary
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:mui="http://firstfloorsoftware.com/ModernUI"
+    xmlns:shell="http://schemas.microsoft.com/winfx/2006/xaml/presentation/shell">
+
+    <ResourceDictionary.MergedDictionaries>
+        <ResourceDictionary Source="/FirstFloor.ModernUI;component/Assets/Button.xaml" />
+        <ResourceDictionary Source="/FirstFloor.ModernUI;component/Assets/Converters.xaml" />
+    </ResourceDictionary.MergedDictionaries>
+
+    <Style x:Key="IronicallyNamedChromelessButtonStyle" TargetType="Button">
+        <Setter Property="Background" Value="{DynamicResource WindowBackground}" />
+        <Setter Property="HorizontalContentAlignment" Value="Center" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+        <Setter Property="Padding" Value="1" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Grid x:Name="grid" Background="{TemplateBinding Background}">
+                        <ContentPresenter
+                            x:Name="contentPresenter"
+                            Margin="{TemplateBinding Padding}"
+                            HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                            VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                            RecognizesAccessKey="True"
+                            SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}" />
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="grid" Property="Background" Value="{DynamicResource ButtonBackgroundHover}" />
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter TargetName="grid" Property="Background" Value="{DynamicResource ButtonBackgroundPressed}" />
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter Property="Foreground" Value="#ADADAD" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style x:Key="CompactWindow" TargetType="mui:ModernWindow">
+        <Setter Property="FontFamily" Value="{DynamicResource DefaultFontFamily}" />
+        <Setter Property="FontSize" Value="{DynamicResource DefaultFontSize}" />
+        <Setter Property="Foreground" Value="{DynamicResource WindowText}" />
+        <Setter Property="Width" Value="800" />
+        <Setter Property="Height" Value="640" />
+        <Setter Property="MinWidth" Value="320" />
+        <Setter Property="MinHeight" Value="320" />
+        <Setter Property="ResizeMode" Value="CanResizeWithGrip" />
+        <Setter Property="UseLayoutRounding" Value="True" />
+        <Setter Property="TextOptions.TextFormattingMode" Value="Display" />
+
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="mui:ModernWindow">
+                    <Border x:Name="WindowBorder" Margin="{Binding Source={x:Static shell:SystemParameters2.Current}, Path=WindowNonClientFrameThickness}">
+                        <Border.Background>
+                            <SolidColorBrush x:Name="WindowBorderBackground" Color="{DynamicResource WindowBackgroundColor}" />
+                        </Border.Background>
+                        <Border.Resources>
+                            <Storyboard x:Key="BackgroundAnimation">
+                                <ColorAnimation
+                                    Duration="0:0:.6"
+                                    Storyboard.TargetName="WindowBorderBackground"
+                                    Storyboard.TargetProperty="Color"
+                                    To="{DynamicResource WindowBackgroundColor}" />
+                            </Storyboard>
+                        </Border.Resources>
+
+                        <Grid>
+                            <Border BorderBrush="{DynamicResource WindowBorder}" BorderThickness="1">
+                                <AdornerDecorator>
+                                    <Grid x:Name="LayoutRoot">
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="26" />
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="*" />
+                                            <RowDefinition Height="15" />
+                                        </Grid.RowDefinitions>
+
+                                        <!--  title bar  -->
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+
+                                            <!--  logo  -->
+                                            <Path
+                                                Width="20"
+                                                Height="20"
+                                                Margin="12,4,0,0"
+                                                HorizontalAlignment="Center"
+                                                VerticalAlignment="Center"
+                                                Data="{TemplateBinding LogoData}"
+                                                Fill="White"
+                                                Stretch="Uniform" />
+
+                                            <!--
+                                                <Image
+                                                Width="20"
+                                                Height="20"
+                                                Margin="12,4,0,0"
+                                                HorizontalAlignment="Center"
+                                                VerticalAlignment="Center"
+                                                Source="{TemplateBinding Icon}"
+                                                Stretch="Uniform" />
+                                            -->
+
+                                            <!--  title  -->
+                                            <TextBlock
+                                                Grid.Column="1"
+                                                Margin="12,4,0,0"
+                                                HorizontalAlignment="Left"
+                                                VerticalAlignment="Center"
+                                                FontFamily="Segoe UI"
+                                                FontSize="16"
+                                                Foreground="{DynamicResource ItemText}"
+                                                Text="{TemplateBinding Title}"
+                                                TextTrimming="CharacterEllipsis" />
+
+                                            <!--  top links  -->
+                                            <ItemsControl
+                                                Grid.Column="2"
+                                                Margin="0,6,18,0"
+                                                HorizontalAlignment="Right"
+                                                VerticalAlignment="Top"
+                                                ItemsSource="{TemplateBinding TitleLinks}"
+                                                shell:WindowChrome.IsHitTestVisibleInChrome="True">
+                                                <ItemsControl.ItemsPanel>
+                                                    <ItemsPanelTemplate>
+                                                        <StackPanel Orientation="Horizontal" />
+                                                    </ItemsPanelTemplate>
+                                                </ItemsControl.ItemsPanel>
+                                                <ItemsControl.ItemTemplate>
+                                                    <DataTemplate>
+                                                        <StackPanel Orientation="Horizontal">
+                                                            <Line
+                                                                x:Name="Separator"
+                                                                Margin="7,0,5,0"
+                                                                Stroke="{DynamicResource SeparatorBackground}"
+                                                                X1=".5"
+                                                                X2=".5"
+                                                                Y1="3"
+                                                                Y2="12" />
+
+                                                            <Button
+                                                                Command="NavigationCommands.GoToPage"
+                                                                CommandParameter="{Binding Source}"
+                                                                CommandTarget="{Binding ElementName=ContentFrame}"
+                                                                Content="{Binding DisplayName}"
+                                                                Style="{StaticResource SystemButtonLink}" />
+                                                        </StackPanel>
+                                                        <DataTemplate.Triggers>
+                                                            <DataTrigger Binding="{Binding RelativeSource={RelativeSource PreviousData}}" Value="{x:Null}">
+                                                                <Setter TargetName="Separator" Property="Visibility" Value="Collapsed" />
+                                                            </DataTrigger>
+                                                        </DataTemplate.Triggers>
+                                                    </DataTemplate>
+                                                </ItemsControl.ItemTemplate>
+                                            </ItemsControl>
+
+                                            <!--  window system buttons  -->
+                                            <StackPanel
+                                                Grid.Column="3"
+                                                HorizontalAlignment="Right"
+                                                Orientation="Horizontal"
+                                                shell:WindowChrome.IsHitTestVisibleInChrome="True">
+
+                                                <Button
+                                                    Width="34"
+                                                    Height="26"
+                                                    Command="{Binding Source={x:Static shell:SystemCommands.MinimizeWindowCommand}}"
+                                                    IsTabStop="False"
+                                                    Padding="0"
+                                                    Style="{StaticResource IronicallyNamedChromelessButtonStyle}"
+                                                    ToolTip="Minimize">
+                                                    <Path
+                                                        Data="F1M0,6L0,9 9,9 9,6 0,6z"
+                                                        Fill="{TemplateBinding Foreground}"
+                                                        SnapsToDevicePixels="True" />
+                                                </Button>
+
+                                                <Grid>
+                                                    <Button
+                                                        x:Name="Restore"
+                                                        Width="34"
+                                                        Height="26"
+                                                        Command="{Binding Source={x:Static shell:SystemCommands.RestoreWindowCommand}}"
+                                                        IsTabStop="False"
+                                                        Padding="0"
+                                                        Style="{StaticResource IronicallyNamedChromelessButtonStyle}"
+                                                        ToolTip="Minimize">
+                                                        <Path
+                                                            Data="F1M0,10L0,3 3,3 3,0 10,0 10,2 4,2 4,3 7,3 7,6 6,6 6,5 1,5 1,10z M1,10L7,10 7,7 10,7 10,2 9,2 9,6 6,6 6,9 1,9z"
+                                                            Fill="{TemplateBinding Foreground}"
+                                                            SnapsToDevicePixels="True" />
+                                                    </Button>
+                                                    <Button
+                                                        x:Name="Maximize"
+                                                        Width="34"
+                                                        Height="26"
+                                                        Command="{Binding Source={x:Static shell:SystemCommands.MaximizeWindowCommand}}"
+                                                        IsTabStop="False"
+                                                        Padding="0"
+                                                        Style="{StaticResource IronicallyNamedChromelessButtonStyle}"
+                                                        ToolTip="Minimize">
+                                                        <Path
+                                                            Data="F1M0,0L0,9 9,9 9,0 0,0 0,3 8,3 8,8 1,8 1,3z"
+                                                            Fill="{TemplateBinding Foreground}"
+                                                            SnapsToDevicePixels="True" />
+                                                    </Button>
+                                                </Grid>
+                                                <Button
+                                                    Width="34"
+                                                    Height="26"
+                                                    Command="{Binding Source={x:Static shell:SystemCommands.CloseWindowCommand}}"
+                                                    IsTabStop="False"
+                                                    Padding="0"
+                                                    Style="{StaticResource IronicallyNamedChromelessButtonStyle}"
+                                                    ToolTip="Minimize">
+                                                    <Path
+                                                        Data="F1M0,0L2,0 5,3 8,0 10,0 6,4 10,8 8,8 5,5 2,8 0,8 4,4 0,0z"
+                                                        Fill="{TemplateBinding Foreground}"
+                                                        SnapsToDevicePixels="True" />
+                                                </Button>
+                                            </StackPanel>
+                                        </Grid>
+
+                                        <!--  main menu  -->
+                                        <mui:ModernMenu
+                                            Grid.Row="1"
+                                            LinkGroups="{TemplateBinding MenuLinkGroups}"
+                                            SelectedSource="{Binding Source, ElementName=ContentFrame, Mode=TwoWay}"
+                                            Style="{StaticResource CompactMenu}" />
+
+                                        <!--  content  -->
+                                        <ContentPresenter
+                                            Grid.Row="3"
+                                            Grid.RowSpan="2"
+                                            Margin="0,5,0,0" />
+                                    </Grid>
+                                </AdornerDecorator>
+                            </Border>
+                            <Border
+                                BorderBrush="{DynamicResource WindowBorderActive}"
+                                BorderThickness="1"
+                                Visibility="{Binding IsActive, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Window}}, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                        </Grid>
+                    </Border>
+
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="WindowState" Value="Maximized">
+                            <Setter TargetName="Maximize" Property="Visibility" Value="Collapsed" />
+                            <Setter TargetName="Restore" Property="Visibility" Value="Visible" />
+                            <Setter TargetName="LayoutRoot" Property="Margin" Value="7" />
+                        </Trigger>
+                        <Trigger Property="WindowState" Value="Normal">
+                            <Setter TargetName="Maximize" Property="Visibility" Value="Visible" />
+                            <Setter TargetName="Restore" Property="Visibility" Value="Collapsed" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+
+        <Setter Property="shell:WindowChrome.WindowChrome">
+            <Setter.Value>
+                <shell:WindowChrome
+                    CornerRadius="0"
+                    GlassFrameThickness="1"
+                    UseAeroCaptionButtons="False" />
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+</ResourceDictionary>

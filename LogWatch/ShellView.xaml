@@ -1,0 +1,103 @@
+﻿<mui:ModernWindow
+    x:Class="LogWatch.ShellView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:details="clr-namespace:LogWatch.Features.RecordDetails"
+    xmlns:local="clr-namespace:LogWatch"
+    xmlns:mui="http://firstfloorsoftware.com/ModernUI"
+    xmlns:records="clr-namespace:LogWatch.Features.Records"
+    xmlns:stats="clr-namespace:LogWatch.Features.Stats"
+    xmlns:util="clr-namespace:LogWatch.Util"
+    Title="{Binding Source={x:Static local:App.SourceInfo}, Path=Name, StringFormat='{}{0} - Log Watch'}"
+    Width="800"
+    Height="450"
+    ContentSource="Features\Records\RecordsView.xaml"
+    Icon="App.ico"
+    Style="{StaticResource CompactWindow}">
+
+    <mui:ModernWindow.LogoData>
+        <util:TextGeometry
+            Brush="White"
+            FontFamily="Consolas"
+            FontSize="22"
+            Text="lw" />
+    </mui:ModernWindow.LogoData>
+
+    <Window.DataContext>
+        <local:ShellViewModel />
+    </Window.DataContext>
+
+    <Window.Resources>
+        <Style
+            x:Key="AutoScrollSwitch"
+            BasedOn="{StaticResource {x:Type ToggleButton}}"
+            TargetType="ToggleButton">
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Background" Value="Transparent" />
+            <Style.Triggers>
+                <Trigger Property="IsChecked" Value="True">
+                    <Setter Property="Foreground" Value="{DynamicResource Accent}" />
+                    <Setter Property="Content" Value="auto scroll is on" />
+                </Trigger>
+                <Trigger Property="IsChecked" Value="False">
+                    <Setter Property="Content" Value="auto scroll is off" />
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+    </Window.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="80*" />
+            <RowDefinition Height="22" />
+            <RowDefinition Height="20*" MinHeight="16" />
+        </Grid.RowDefinitions>
+
+        <records:RecordsView x:Name="Records" />
+
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <ProgressBar
+                Grid.ColumnSpan="3"
+                VerticalAlignment="Stretch"
+                Background="Transparent"
+                Foreground="{DynamicResource InputBackground}"
+                Value="{Binding ViewModel.Records.Progress, ElementName=Records}" />
+
+            <ToggleButton
+                HorizontalAlignment="Left"
+                VerticalContentAlignment="Center"
+                IsChecked="{Binding ViewModel.AutoScroll, ElementName=Records}"
+                Padding="5,0,5,0"
+                Style="{StaticResource AutoScrollSwitch}" />
+
+            <stats:StatsView
+                Grid.Column="1"
+                Margin="15,0,5,0"
+                HorizontalAlignment="Left" />
+
+            <TextBlock
+                Grid.Column="3"
+                Margin="0,0,5,0"
+                HorizontalAlignment="Right"
+                VerticalAlignment="Center"
+                Text="{Binding ViewModel.Records.Count, ElementName=Records, StringFormat='{}{0:#,0} records'}" />
+        </Grid>
+
+        <details:RecordDetailsView Grid.Row="2" />
+
+        <GridSplitter
+            Grid.Row="1"
+            Height="3"
+            Margin="0,0,16,0"
+            VerticalAlignment="Top"
+            Background="Transparent"
+            ResizeBehavior="PreviousAndNext" />
+    </Grid>
+
+</mui:ModernWindow>

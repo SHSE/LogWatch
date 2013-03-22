@@ -1,0 +1,84 @@
+﻿<UserControl
+    x:Class="LogWatch.Features.RecordDetails.RecordDetailsView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:feature="clr-namespace:LogWatch.Features.RecordDetails"
+    xmlns:local="clr-namespace:LogWatch"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    Background="#1A1A1A"
+    d:DesignHeight="300"
+    d:DesignWidth="300"
+    mc:Ignorable="d">
+
+    <UserControl.Resources>
+        <feature:RecordDetailsViewModel x:Key="ViewModel" ErrorDialog="{x:Static local:App.ErrorDialog}" />
+
+        <feature:ExceptionHighlighter
+            x:Key="Highlighter"
+            Class="#E8BC64"
+            Line="#6897BB"
+            Message="White"
+            Method="White"
+            MethodParameterType="#E8BC64"
+            Namespace="LightGray"
+            NavigateToUrlCommand="{Binding OpenFileCommand}"
+            String="#A5C25C" />
+    </UserControl.Resources>
+
+    <UserControl.DataContext>
+        <StaticResource ResourceKey="ViewModel" />
+    </UserControl.DataContext>
+
+    <ScrollViewer HorizontalScrollBarVisibility="Disabled">
+        <StackPanel>
+            <TextBlock
+                Margin="12,0,12,0"
+                FontFamily="Consolas"
+                FontSize="11pt"
+                Text="{Binding Record.Message}"
+                TextWrapping="Wrap">
+                <TextBlock.Style>
+                    <Style TargetType="TextBlock">
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding Record.Level}" Value="{x:Static local:LogLevel.Trace}">
+                                <Setter Property="Foreground" Value="{StaticResource LogLevelTrace}" />
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding Record.Level}" Value="{x:Static local:LogLevel.Debug}">
+                                <Setter Property="Foreground" Value="{StaticResource LogLevelDebug}" />
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding Record.Level}" Value="{x:Static local:LogLevel.Info}">
+                                <Setter Property="Foreground" Value="{StaticResource LogLevelInfo}" />
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding Record.Level}" Value="{x:Static local:LogLevel.Warn}">
+                                <Setter Property="Foreground" Value="{StaticResource LogLevelWarn}" />
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding Record.Level}" Value="{x:Static local:LogLevel.Error}">
+                                <Setter Property="Foreground" Value="{StaticResource LogLevelError}" />
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding Record.Level}" Value="{x:Static local:LogLevel.Fatal}">
+                                <Setter Property="Foreground" Value="Black" />
+                                <Setter Property="Background" Value="{StaticResource LogLevelFatal}" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </TextBlock.Style>
+            </TextBlock>
+
+            <ContentControl
+                Margin="12,5,12,0"
+                Content="{Binding Record.Exception, Converter={StaticResource Highlighter}}"
+                FontFamily="Consolas"
+                FontSize="11pt">
+                <ContentControl.Resources>
+                    <!--  ReSharper disable Xaml.RedundantResource  -->
+                    <Style TargetType="TextBlock">
+                        <Setter Property="TextWrapping" Value="Wrap" />
+                    </Style>
+                    <!--  ReSharper restore Xaml.RedundantResource  -->
+                </ContentControl.Resources>
+            </ContentControl>
+
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

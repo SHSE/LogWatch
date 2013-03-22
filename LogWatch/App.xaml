@@ -1,0 +1,23 @@
+﻿<Application
+    x:Class="LogWatch.App"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    DispatcherUnhandledException="OnDispatcherUnhandledException">
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/FirstFloor.ModernUI;component/Assets/ModernUI.xaml" />
+                <ResourceDictionary Source="/FirstFloor.ModernUI;component/Assets/ModernUI.Dark.xaml" />
+                <ResourceDictionary Source="/LogWatch;component/Styles/CompactMenu.xaml" />
+                <ResourceDictionary Source="/LogWatch;component/Styles/CompactWindow.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+
+            <SolidColorBrush x:Key="LogLevelTrace" Color="Gray" />
+            <SolidColorBrush x:Key="LogLevelDebug" Color="White" />
+            <SolidColorBrush x:Key="LogLevelInfo" Color="Turquoise" />
+            <SolidColorBrush x:Key="LogLevelWarn" Color="Yellow" />
+            <SolidColorBrush x:Key="LogLevelError" Color="Red" />
+            <SolidColorBrush x:Key="LogLevelFatal" Color="#CDFF0000" />
+        </ResourceDictionary>
+    </Application.Resources>
+</Application>
