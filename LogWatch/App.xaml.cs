@@ -1,6 +1,7 @@
 ﻿using System;
 using System.ComponentModel.Composition;
 using System.ComponentModel.Composition.Hosting;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.ExceptionServices;
@@ -101,7 +102,8 @@ namespace LogWatch {
 
             TaskScheduler.UnobservedTaskException += (sender, args) => HandleException(args.Exception);
 
-            var activationData = AppDomain.CurrentDomain.SetupInformation.ActivationArguments.ActivationData;
+            var activationArguments = AppDomain.CurrentDomain.SetupInformation.ActivationArguments;
+            var activationData = activationArguments != null ? activationArguments.ActivationData : null;
 
             var filePath = (activationData ?? e.Args)
                 .Select(x => x.Replace("file:///", string.Empty))
