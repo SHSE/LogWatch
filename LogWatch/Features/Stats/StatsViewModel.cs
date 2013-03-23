@@ -154,13 +154,6 @@ namespace LogWatch.Features.Stats {
                                 break;
                         }
 
-                    this.RaisePropertyChanged(() => this.TraceCount);
-                    this.RaisePropertyChanged(() => this.DebugCount);
-                    this.RaisePropertyChanged(() => this.InfoCount);
-                    this.RaisePropertyChanged(() => this.WarnCount);
-                    this.RaisePropertyChanged(() => this.ErrorCount);
-                    this.RaisePropertyChanged(() => this.FatalCount);
-
                     return new {
                         groupings,
                         batch.Last().SourceStatus
@@ -200,6 +193,13 @@ namespace LogWatch.Features.Stats {
                                 break;
                         }
                     }
+
+                    this.RaisePropertyChanged(() => this.TraceCount);
+                    this.RaisePropertyChanged(() => this.DebugCount);
+                    this.RaisePropertyChanged(() => this.InfoCount);
+                    this.RaisePropertyChanged(() => this.WarnCount);
+                    this.RaisePropertyChanged(() => this.ErrorCount);
+                    this.RaisePropertyChanged(() => this.FatalCount);
                 });
         }
     }

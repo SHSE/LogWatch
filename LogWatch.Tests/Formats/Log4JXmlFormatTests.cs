@@ -63,7 +63,7 @@ namespace LogWatch.Tests.Formats {
 
             format.ReadSegments(observer, stream, CancellationToken.None).Wait();
 
-            Assert.Equal(120, observer.Messages.Count);
+            Assert.Equal(1200, observer.Messages.Count);
 
             var segments = observer.Messages.Select(x => x.Value.Value).ToArray();
 
