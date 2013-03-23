@@ -67,13 +67,14 @@ namespace LogWatch.Util {
 
         public static IReadOnlyList<long> GetOccurences(
             byte[] pattern,
-            byte[] buffer,
+            ArraySegment<byte> bufferSegment,
             CancellationToken cancellationToken) {
             var transitions = CreatePrefixArray(pattern);
             var occurences = new List<long>();
+            var buffer = bufferSegment.Array;
             var m = 0;
 
-            for (var i = 0; i < buffer.Length; i++) {
+            for (var i = bufferSegment.Offset; i < bufferSegment.Count; i++) {
                 cancellationToken.ThrowIfCancellationRequested();
 
                 if (buffer[i] == pattern[m])

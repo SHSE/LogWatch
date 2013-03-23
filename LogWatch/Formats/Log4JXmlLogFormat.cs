@@ -14,6 +14,12 @@ namespace LogWatch.Formats {
         private static readonly byte[] EventStart = Encoding.UTF8.GetBytes("<log4j:event ");
         private static readonly byte[] EventEnd = Encoding.UTF8.GetBytes("</log4j:event>");
 
+        public Log4JXmlLogFormat() {
+            this.BufferSize = 16*1024;
+        }
+
+        public int BufferSize { get; set; }
+
         public Record DeserializeRecord(ArraySegment<byte> segment) {
             try {
                 var text = Encoding.UTF8.GetString(segment.Array, segment.Offset, segment.Count)
@@ -48,7 +54,7 @@ namespace LogWatch.Formats {
             CancellationToken cancellationToken) {
             var offset = stream.Position;
 
-            var buffer = new byte[16*1024];
+            var buffer = new byte[this.BufferSize];
 
             while (true) {
                 stream.Position = offset;
@@ -58,8 +64,15 @@ namespace LogWatch.Formats {
                 if (count == 0)
                     return offset;
 
-                var startOffsets = KmpUtil.GetOccurences(EventStart, buffer, cancellationToken);
-                var endOffsets = KmpUtil.GetOccurences(EventEnd, buffer, cancellationToken);
+                var startOffsets = KmpUtil.GetOccurences(
+                    EventStart,
+                    new ArraySegment<byte>(buffer, 0, count),
+                    cancellationToken);
+
+                var endOffsets = KmpUtil.GetOccurences(
+                    EventEnd,
+                    new ArraySegment<byte>(buffer, 0, count),
+                    cancellationToken);
 
                 if (startOffsets.Count == 0 || endOffsets.Count == 0)
                     return offset;

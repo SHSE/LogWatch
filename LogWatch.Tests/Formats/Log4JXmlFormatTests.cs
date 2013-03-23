@@ -10,7 +10,7 @@ using Xunit;
 namespace LogWatch.Tests.Formats {
     public class Log4JXmlFormatTests {
         [Fact]
-        public void ReadsSegments() {
+        public void ReadsSegmentsCorrectly() {
             var bytes = Encoding.UTF8.GetBytes(
                 "<log4j:event logger=\"ConsoleApplication1.Program\" level=\"INFO\" timestamp=\"1361281966733\" thread=\"1\">" +
                 "  <log4j:message>Istcua orojurf bysgurnl t.</log4j:message>" +
@@ -41,6 +41,33 @@ namespace LogWatch.Tests.Formats {
             Assert.True(segments.Any(x => x.Offset == 0 && x.Length == 342));
             Assert.True(segments.Any(x => x.Offset == 342 && x.Length == 347));
             Assert.Equal(stream.Length, offset);
+        }
+
+        [Fact]
+        public void ReadsSegmentsFromLargeSource() {
+            var log = Enumerable
+                .Repeat(
+                    "<log4j:event logger=\"ConsoleApplication1.Program\" level=\"INFO\" timestamp=\"1361281966733\" thread=\"1\">" +
+                    "  <log4j:message>Istcua orojurf bysgurnl t.</log4j:message>" +
+                    "  <log4j:properties>" +
+                    "    <log4j:data name=\"log4japp\" value=\"ConsoleApplication1.exe(6512)\" />" +
+                    "    <log4j:data name=\"log4jmachinename\" value=\"user1\" />" +
+                    "  </log4j:properties>" +
+                    "</log4j:event>", 1200)
+                .Aggregate(string.Concat);
+
+            var stream = new MemoryStream(Encoding.UTF8.GetBytes(log));
+            var format = new Log4JXmlLogFormat {BufferSize = 10000};
+            var testScheduler = new TestScheduler();
+            var observer = testScheduler.CreateObserver<RecordSegment>();
+
+            format.ReadSegments(observer, stream, CancellationToken.None).Wait();
+
+            Assert.Equal(120, observer.Messages.Count);
+
+            var segments = observer.Messages.Select(x => x.Value.Value).ToArray();
+
+            Assert.True(segments.All(x => x.Length > 0));
         }
 
         [Fact]
