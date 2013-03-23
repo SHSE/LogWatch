@@ -20,6 +20,7 @@
             Brush="White"
             FontFamily="Consolas"
             FontSize="22"
+            FontWeight="Bold"
             Text="lw" />
     </mui:ModernWindow.LogoData>
 

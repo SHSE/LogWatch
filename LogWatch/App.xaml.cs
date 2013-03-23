@@ -101,7 +101,11 @@ namespace LogWatch {
 
             TaskScheduler.UnobservedTaskException += (sender, args) => HandleException(args.Exception);
 
-            var filePath = e.Args.FirstOrDefault();
+            var activationData = AppDomain.CurrentDomain.SetupInformation.ActivationArguments.ActivationData;
+
+            var filePath = (activationData ?? e.Args)
+                .Select(x => x.Replace("file:///", string.Empty))
+                .FirstOrDefault();
 
             this.ShutdownMode = ShutdownMode.OnExplicitShutdown;
 

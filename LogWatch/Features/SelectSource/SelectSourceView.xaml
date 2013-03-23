@@ -19,6 +19,7 @@
         <feature:SelectSourceViewModel
             CreateFileLogSourceInfo="{x:Static local:App.CreateFileLogSource}"
             HandleException="{x:Static local:App.HandleException}"
+            SelectEndpoint="{x:Static feature:SelectSourceView.SelectEndPoint}"
             SelectFile="{x:Static local:App.OpenFileDialog}"
             SelectLogFormat="{x:Static local:App.SelectFormat}" />
     </Window.DataContext>

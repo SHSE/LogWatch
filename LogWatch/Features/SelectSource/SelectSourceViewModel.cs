@@ -52,6 +52,9 @@ namespace LogWatch.Features.SelectSource {
         private void ListenNetwork() {
             var endPoint = this.SelectEndpoint();
 
+            if (endPoint == null)
+                return;
+
             var logSource = new UdpLogSource(endPoint, Path.GetTempFileName()) {
                 SelectLogFormat = stream => Task.Factory.StartNew(
                     () => this.SelectLogFormat(stream),

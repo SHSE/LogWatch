@@ -9,6 +9,7 @@
     x:Name="View"
     Title="Log Watch"
     Width="300"
+    
     Height="300">
 
     <mui:ModernDialog.Resources>
