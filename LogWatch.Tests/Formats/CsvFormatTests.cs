@@ -12,7 +12,7 @@ namespace LogWatch.Tests.Formats {
     public class CsvFormatTests {
         [Fact]
         public void ReadsSegment() {
-            var stream = CreateStream("2012-03-05 13:56:12;warn;Program;\"Test message\";TextException");
+            var stream = CreateStream("2012-03-05 13:56:12;warn;Program;\"Test message\";TextException\r\n");
 
             var format = new CsvLogFormat {
                 ReadHeader = false,
@@ -59,7 +59,7 @@ namespace LogWatch.Tests.Formats {
         public void ReadsSegmentWithQuotedField() {
             var stream = CreateStream(
                 "time;level;message;logger;exception\r\n" +
-                "2012-01-01 00:00:00;Info;\"Quoted \r\n field \r \n\";Program;Exception");
+                "2012-01-01 00:00:00;Info;\"Quoted \r\n field \r \n\";Program;Exception\r\n");
 
             var format = new CsvLogFormat();
             var subject = new ReplaySubject<RecordSegment>();
@@ -71,7 +71,7 @@ namespace LogWatch.Tests.Formats {
             var segment = subject.ToEnumerable().FirstOrDefault();
 
             Assert.Equal(37, segment.Offset);
-            Assert.Equal(66, segment.Length);
+            Assert.Equal(68, segment.Length);
         }
 
         [Fact]
