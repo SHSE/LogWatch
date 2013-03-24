@@ -10,6 +10,8 @@ using System.Windows.Input;
 using System.Windows.Media;
 
 namespace LogWatch.Features.RecordDetails {
+    [StyleTypedProperty(Property = "ContainerStyle", StyleTargetType = typeof (RichTextBox))]
+    [StyleTypedProperty(Property = "HyperlinkStyle", StyleTargetType = typeof (Hyperlink))]
     public class ExceptionHighlighter : Freezable, IValueConverter {
         private static readonly Regex Header = new Regex(@"^(?<NS>(?:\w+[.])+)(?<Class>\w+): (?<Message>.*)");
 
@@ -18,6 +20,12 @@ namespace LogWatch.Features.RecordDetails {
 
         public static readonly DependencyProperty NavigateToUrlCommandProperty =
             DependencyProperty.Register("NavigateToUrlCommand", typeof (ICommand), typeof (ExceptionHighlighter));
+
+        public static readonly DependencyProperty HyperlinkStyleProperty =
+            DependencyProperty.Register("HyperlinkStyle", typeof (Style), typeof (ExceptionHighlighter));
+
+        public static readonly DependencyProperty ContainerStyleProperty =
+            DependencyProperty.Register("ContainerStyle", typeof (Style), typeof (ExceptionHighlighter));
 
         public Brush Namespace { get; set; }
         public Brush Method { get; set; }
@@ -32,6 +40,16 @@ namespace LogWatch.Features.RecordDetails {
             set { this.SetValue(NavigateToUrlCommandProperty, value); }
         }
 
+        public Style ContainerStyle {
+            get { return (Style) this.GetValue(ContainerStyleProperty); }
+            set { this.SetValue(ContainerStyleProperty, value); }
+        }
+
+        public Style HyperlinkStyle {
+            get { return (Style) this.GetValue(HyperlinkStyleProperty); }
+            set { this.SetValue(HyperlinkStyleProperty, value); }
+        }
+
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture) {
             return this.CreateTextBlock((string) value);
         }
@@ -40,12 +58,11 @@ namespace LogWatch.Features.RecordDetails {
             throw new NotSupportedException();
         }
 
-        private TextBlock CreateTextBlock(string exception) {
+        private RichTextBox CreateTextBlock(string exception) {
             if (string.IsNullOrEmpty(exception))
-                return new TextBlock {Text = exception};
+                return null;
 
-            var result = new TextBlock();
-
+            var result = new Paragraph();
             var lines = exception.Split(new[] {Environment.NewLine}, StringSplitOptions.None);
 
             foreach (var line in lines) {
@@ -58,7 +75,14 @@ namespace LogWatch.Features.RecordDetails {
                 result.Inlines.Add(span);
             }
 
-            return result;
+            return new RichTextBox(new FlowDocument(result)) {
+                IsReadOnly = true,
+                Padding = new Thickness(0),
+                Margin = new Thickness(0),
+                Background = null,
+                BorderThickness = new Thickness(0),
+                Style = this.ContainerStyle
+            };
         }
 
         private bool TryStackTraceItem(string line, Span span) {
@@ -76,7 +100,10 @@ namespace LogWatch.Features.RecordDetails {
                 var url = match.Groups["Url"].Value;
 
                 if (!string.IsNullOrEmpty(url)) {
-                    var hyperlink = new Hyperlink(new Run(Path.GetFileName(url))) {ToolTip = url};
+                    var hyperlink = new Hyperlink(new Run(Path.GetFileName(url))) {
+                        ToolTip = url,
+                        Style = this.HyperlinkStyle
+                    };
 
                     BindingOperations.SetBinding(hyperlink, Hyperlink.CommandProperty,
                         new Binding("NavigateToUrlCommand") {

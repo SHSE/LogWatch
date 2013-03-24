@@ -12,11 +12,9 @@
     d:DesignWidth="300"
     mc:Ignorable="d">
 
-    <UserControl.DataContext>
-        <feature:RecordsViewModel LogSourceInfo="{x:Static local:App.SourceInfo}" />
-    </UserControl.DataContext>
-
     <UserControl.Resources>
+        <feature:RecordsViewModel x:Key="ViewModel" LogSourceInfo="{x:Static local:App.SourceInfo}" />
+
         <Style
             x:Key="RecordRowStyle"
             BasedOn="{StaticResource {x:Type ListViewItem}}"
@@ -62,9 +60,34 @@
             <Setter Property="TextWrapping" Value="NoWrap" />
         </Style>
 
+        <Style
+            x:Key="TimestampColumnHeader"
+            BasedOn="{StaticResource {x:Type GridViewColumnHeader}}"
+            TargetType="GridViewColumnHeader">
+            <Setter Property="ContextMenu">
+                <Setter.Value>
+                    <ContextMenu>
+                        <MenuItem
+                            Command="{Binding SetTimestampFormatCommand, Source={StaticResource ViewModel}}"
+                            CommandParameter="{x:Static feature:TimestampFormat.Short}"
+                            Header="Short" />
+                        <MenuItem
+                            Command="{Binding SetTimestampFormatCommand, Source={StaticResource ViewModel}}"
+                            CommandParameter="{x:Static feature:TimestampFormat.Long}"
+                            Header="Long" />
+                    </ContextMenu>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
         <feature:IgnoreLinebreaksConverter x:Key="IgnoreLinebreaksConverter" />
         <feature:LoggerToShortStringConverter x:Key="LoggerToShortStringConverter" />
     </UserControl.Resources>
+
+    <UserControl.DataContext>
+        <StaticResource ResourceKey="ViewModel" />
+    </UserControl.DataContext>
+
     <Grid>
         <ListView
             Background="#1A1A1A"
@@ -99,6 +122,7 @@
             <ListView.View>
                 <GridView AllowsColumnReorder="False">
                     <GridView.Columns>
+                        <!--  #  -->
                         <GridViewColumn Width="45" Header="#">
                             <GridViewColumn.CellTemplate>
                                 <DataTemplate DataType="local:Record">
@@ -110,6 +134,8 @@
                                 </DataTemplate>
                             </GridViewColumn.CellTemplate>
                         </GridViewColumn>
+
+                        <!--  Level  -->
                         <GridViewColumn Header="Level">
                             <GridViewColumn.CellTemplate>
                                 <DataTemplate DataType="local:Record">
@@ -120,20 +146,50 @@
                                 </DataTemplate>
                             </GridViewColumn.CellTemplate>
                         </GridViewColumn>
-                        <GridViewColumn Header="Timestamp">
+
+                        <!--  Timestamp  -->
+                        <GridViewColumn Header="Timestamp" HeaderContainerStyle="{StaticResource TimestampColumnHeader}">
                             <GridViewColumn.CellTemplate>
                                 <DataTemplate DataType="local:Record">
-                                    <TextBlock Style="{StaticResource RecordCellStyle}" Text="{Binding Timestamp, StringFormat={}{0:T}}" />
+                                    <Grid>
+                                        <TextBlock
+                                            Name="Short"
+                                            Style="{StaticResource RecordCellStyle}"
+                                            Text="{Binding Timestamp, StringFormat={}{0:T}}"
+                                            ToolTip="{Binding Timestamp, StringFormat={}{0:yyyy-MM-dd HH':'mm':'ss}}" />
+                                        <TextBlock
+                                            Name="Long"
+                                            Style="{StaticResource RecordCellStyle}"
+                                            Text="{Binding Timestamp, StringFormat={}{0:yyyy-MM-dd HH':'mm':'ss}}"
+                                            Visibility="Collapsed" />
+                                    </Grid>
+                                    <DataTemplate.Triggers>
+                                        <DataTrigger Binding="{Binding TimestampFormat, Source={StaticResource ViewModel}}" Value="{x:Static feature:TimestampFormat.Long}">
+                                            <Setter TargetName="Long" Property="Visibility" Value="Visible" />
+                                            <Setter TargetName="Short" Property="Visibility" Value="Collapsed" />
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding TimestampFormat, Source={StaticResource ViewModel}}" Value="{x:Static feature:TimestampFormat.Short}">
+                                            <Setter TargetName="Short" Property="Visibility" Value="Visible" />
+                                            <Setter TargetName="Long" Property="Visibility" Value="Collapsed" />
+                                        </DataTrigger>
+                                    </DataTemplate.Triggers>
                                 </DataTemplate>
                             </GridViewColumn.CellTemplate>
                         </GridViewColumn>
+
+                        <!--  Logger  -->
                         <GridViewColumn Header="Logger">
                             <GridViewColumn.CellTemplate>
                                 <DataTemplate DataType="local:Record">
-                                    <TextBlock Style="{StaticResource RecordCellStyle}" Text="{Binding Logger, Converter={StaticResource LoggerToShortStringConverter}}" />
+                                    <TextBlock
+                                        Style="{StaticResource RecordCellStyle}"
+                                        Text="{Binding Logger, Converter={StaticResource LoggerToShortStringConverter}}"
+                                        ToolTip="{Binding Logger}" />
                                 </DataTemplate>
                             </GridViewColumn.CellTemplate>
                         </GridViewColumn>
+
+                        <!--  Message  -->
                         <GridViewColumn Header="Message">
                             <GridViewColumn.CellTemplate>
                                 <DataTemplate DataType="local:Record">

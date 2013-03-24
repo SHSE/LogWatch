@@ -13,6 +13,7 @@ namespace LogWatch.Features.Records {
     public class RecordsViewModel : ViewModelBase {
         private bool autoScroll;
         private RecordCollection records;
+        private TimestampFormat timestampFormat;
 
         public RecordsViewModel() {
             if (this.IsInDesignMode)
@@ -20,6 +21,7 @@ namespace LogWatch.Features.Records {
 
             this.Scheduler = System.Reactive.Concurrency.Scheduler.Default;
             this.SelectRecordCommand = new RelayCommand<Record>(this.SelectRecord);
+            this.SetTimestampFormatCommand = new RelayCommand<TimestampFormat>(format => this.TimestampFormat = format);
             this.MessengerInstance.Register<NavigatedToRecordMessage>(this, this.OnNavigateToRecord);
         }
 
@@ -55,6 +57,13 @@ namespace LogWatch.Features.Records {
         public IScheduler Scheduler { get; set; }
         public LogSourceInfo LogSourceInfo { get; set; }
 
+        public TimestampFormat TimestampFormat {
+            get { return this.timestampFormat; }
+            set { this.Set(ref this.timestampFormat, value); }
+        }
+
+        public RelayCommand<TimestampFormat> SetTimestampFormatCommand { get;  set; }
+
         private void Set<T>(ref T field, T newValue, [CallerMemberName] string propertyName = null) {
             this.Set(propertyName, ref field, newValue, false);
         }
@@ -76,5 +85,10 @@ namespace LogWatch.Features.Records {
 
         [UsedImplicitly]
         public event EventHandler Navigated = (sender, args) => { };
+    }
+
+    public enum TimestampFormat {
+        Short,
+        Long
     }
 }

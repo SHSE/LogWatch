@@ -17,13 +17,54 @@
         <feature:ExceptionHighlighter
             x:Key="Highlighter"
             Class="#E8BC64"
+            HyperlinkStyle="{DynamicResource {x:Type Hyperlink}}"
             Line="#6897BB"
             Message="White"
             Method="White"
             MethodParameterType="#E8BC64"
             Namespace="LightGray"
             NavigateToUrlCommand="{Binding OpenFileCommand}"
-            String="#A5C25C" />
+            String="#A5C25C">
+            <feature:ExceptionHighlighter.ContainerStyle>
+                <Style TargetType="RichTextBox">
+                    <Setter Property="FontFamily" Value="Consolas" />
+                    <Setter Property="FontSize" Value="11pt" />
+                    <Setter Property="IsDocumentEnabled" Value="True" />
+                    <Setter Property="Foreground" Value="{DynamicResource InputText}" />
+                </Style>
+            </feature:ExceptionHighlighter.ContainerStyle>
+        </feature:ExceptionHighlighter>
+
+        <Style x:Key="MessageContainerStyle" TargetType="TextBox">
+            <Setter Property="Padding" Value="10,0,0,0" />
+            <Setter Property="FontFamily" Value="Consolas" />
+            <Setter Property="FontSize" Value="11pt" />
+            <Setter Property="IsReadOnly" Value="True" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="TextWrapping" Value="Wrap" />
+            <Setter Property="Background" Value="{x:Null}" />
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding Record.Level}" Value="{x:Static local:LogLevel.Trace}">
+                    <Setter Property="Foreground" Value="{StaticResource LogLevelTrace}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Record.Level}" Value="{x:Static local:LogLevel.Debug}">
+                    <Setter Property="Foreground" Value="{StaticResource LogLevelDebug}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Record.Level}" Value="{x:Static local:LogLevel.Info}">
+                    <Setter Property="Foreground" Value="{StaticResource LogLevelInfo}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Record.Level}" Value="{x:Static local:LogLevel.Warn}">
+                    <Setter Property="Foreground" Value="{StaticResource LogLevelWarn}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Record.Level}" Value="{x:Static local:LogLevel.Error}">
+                    <Setter Property="Foreground" Value="{StaticResource LogLevelError}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Record.Level}" Value="{x:Static local:LogLevel.Fatal}">
+                    <Setter Property="Foreground" Value="Black" />
+                    <Setter Property="Background" Value="{StaticResource LogLevelFatal}" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
     </UserControl.Resources>
 
     <UserControl.DataContext>
@@ -32,53 +73,8 @@
 
     <ScrollViewer HorizontalScrollBarVisibility="Disabled">
         <StackPanel>
-            <TextBlock
-                Margin="12,0,12,0"
-                FontFamily="Consolas"
-                FontSize="11pt"
-                Text="{Binding Record.Message}"
-                TextWrapping="Wrap">
-                <TextBlock.Style>
-                    <Style TargetType="TextBlock">
-                        <Style.Triggers>
-                            <DataTrigger Binding="{Binding Record.Level}" Value="{x:Static local:LogLevel.Trace}">
-                                <Setter Property="Foreground" Value="{StaticResource LogLevelTrace}" />
-                            </DataTrigger>
-                            <DataTrigger Binding="{Binding Record.Level}" Value="{x:Static local:LogLevel.Debug}">
-                                <Setter Property="Foreground" Value="{StaticResource LogLevelDebug}" />
-                            </DataTrigger>
-                            <DataTrigger Binding="{Binding Record.Level}" Value="{x:Static local:LogLevel.Info}">
-                                <Setter Property="Foreground" Value="{StaticResource LogLevelInfo}" />
-                            </DataTrigger>
-                            <DataTrigger Binding="{Binding Record.Level}" Value="{x:Static local:LogLevel.Warn}">
-                                <Setter Property="Foreground" Value="{StaticResource LogLevelWarn}" />
-                            </DataTrigger>
-                            <DataTrigger Binding="{Binding Record.Level}" Value="{x:Static local:LogLevel.Error}">
-                                <Setter Property="Foreground" Value="{StaticResource LogLevelError}" />
-                            </DataTrigger>
-                            <DataTrigger Binding="{Binding Record.Level}" Value="{x:Static local:LogLevel.Fatal}">
-                                <Setter Property="Foreground" Value="Black" />
-                                <Setter Property="Background" Value="{StaticResource LogLevelFatal}" />
-                            </DataTrigger>
-                        </Style.Triggers>
-                    </Style>
-                </TextBlock.Style>
-            </TextBlock>
-
-            <ContentControl
-                Margin="12,5,12,0"
-                Content="{Binding Record.Exception, Converter={StaticResource Highlighter}}"
-                FontFamily="Consolas"
-                FontSize="11pt">
-                <ContentControl.Resources>
-                    <!--  ReSharper disable Xaml.RedundantResource  -->
-                    <Style TargetType="TextBlock">
-                        <Setter Property="TextWrapping" Value="Wrap" />
-                    </Style>
-                    <!--  ReSharper restore Xaml.RedundantResource  -->
-                </ContentControl.Resources>
-            </ContentControl>
-
+            <TextBox Style="{StaticResource MessageContainerStyle}" Text="{Binding Record.Message}" />
+            <ContentControl Margin="7,0,0,0" Content="{Binding Record.Exception, Converter={StaticResource Highlighter}}" />
         </StackPanel>
     </ScrollViewer>
 </UserControl>
