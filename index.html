@@ -16,7 +16,7 @@
     <div class="wrapper">
       <header>
         <h1>LogWatch</h1>
-        <p>Minimalistic viewer for NLog and Log4Net</p>
+        <p>Minimalistic viewer for NLog, Log4Net and others</p>
 
         <p class="view"><a href="https://github.com/SHSE/LogWatch">View the Project on GitHub <small>SHSE/LogWatch</small></a></p>
 
@@ -30,21 +30,26 @@
       <section>
         <h1>LogWatch</h1>
 
+<p>Minimalistic viewer for NLog, Log4Net and others.</p>
+
+<p><img src="http://i.imgur.com/1lSe8hK.png" alt="LogWatch screenshot"></p>
+
 <p>LogWatch allows you to view output from NLog and Log4Net loggers. </p>
 
+<h2>Features</h2>
+
 <ul>
-<li>Designed to handle large log files (hundreds of megabytes)</li>
-<li>Accepts log files in CSV or Log4JXml formats</li>
+<li>Designed to handle large log files (hundreds of megabytes, it doesn't read all the data into memory)</li>
+<li>Live file streaming support (view files that are currently being updated by the logger)</li>
+<li>Accepts log files in CSV or Log4J XML formats</li>
+<li>Automatic log format selection</li>
 <li>Receives log records via network</li>
+<li>Provides quick jump to a next Trace/Debug/Info/Warn/Error/Fatal record functionality</li>
 </ul><h2>File source</h2>
 
-<p>NLog:</p>
+<p>NLog configuration for CSV format:</p>
 
-<div class="highlight"><pre><span class="nt">&lt;target</span> 
-  <span class="na">name=</span><span class="s">"file"</span> 
-  <span class="na">xsi:type=</span><span class="s">"File"</span> 
-  <span class="na">encoding=</span><span class="s">"utf-8"</span>
-  <span class="na">fileName=</span><span class="s">"${specialfolder:folder=ApplicationData}\Forensics\Logs\Worker-${shortdate}.log"</span><span class="nt">&gt;</span>
+<div class="highlight"><pre><span class="nt">&lt;target</span> <span class="na">name=</span><span class="s">"file"</span> <span class="na">xsi:type=</span><span class="s">"File"</span> <span class="na">encoding=</span><span class="s">"utf-8"</span> <span class="na">fileName=</span><span class="s">"mylog.log"</span><span class="nt">&gt;</span>
   <span class="nt">&lt;layout</span> <span class="na">xsi:type=</span><span class="s">"CsvLayout"</span><span class="nt">&gt;</span>
     <span class="nt">&lt;column</span> <span class="na">name=</span><span class="s">"time"</span> <span class="na">layout=</span><span class="s">"${longdate}"</span> <span class="nt">/&gt;</span>
     <span class="nt">&lt;column</span> <span class="na">name=</span><span class="s">"message"</span> <span class="na">layout=</span><span class="s">"${message}"</span> <span class="nt">/&gt;</span>
@@ -57,10 +62,22 @@
 
 <h2>Network source</h2>
 
+<p>LogWatch accepts log records via UDP protocol in Log4J XML format (the same format as NLogViewer).</p>
+
+<p>NLog configuration:</p>
+
 <div class="highlight"><pre><span class="nt">&lt;target</span> <span class="na">name=</span><span class="s">"viewer"</span> <span class="na">xsi:type=</span><span class="s">"NLogViewer"</span> <span class="na">address=</span><span class="s">"udp://127.0.0.1:13370"</span> <span class="na">includeNLogData=</span><span class="s">"true"</span><span class="nt">&gt;</span>
   <span class="nt">&lt;parameter</span> <span class="na">name=</span><span class="s">"exception"</span> <span class="na">layout=</span><span class="s">"${exception:format=ToString}"</span><span class="nt">/&gt;</span>
 <span class="nt">&lt;/target&gt;</span>
 </pre></div>
+
+<h2>TODO</h2>
+
+<ul>
+<li>[ ] text search</li>
+<li>[ ] custom log record properties</li>
+<li>[ ] user provided parser using <a href="http://dinosaur.compilertools.net/lex">Lex</a> syntax</li>
+</ul>
       </section>
       <footer>
         <p>This project is maintained by <a href="https://github.com/SHSE">SHSE</a></p>
