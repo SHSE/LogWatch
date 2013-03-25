@@ -3,9 +3,9 @@ LogWatch
 
 Minimalistic viewer for NLog, Log4Net and others.
 
-![
-[Install via ClickOnce](http://master.dl.sourceforge.net/project/logwatch-dotnet/LogWatch.application)
-](http://dabuttonfactory.com/b.png?t=Install%20via%20ClickOnce&f=Calibri&ts=24&tc=ffffff&tshs=1&tshc=222222&it=png&c=5&bgt=gradient&bgc=707070&ebgc=5c5c5c&hp=20&vp=11)
+[
+![Install via ClickOnce](http://dabuttonfactory.com/b.png?t=Install%20via%20ClickOnce&f=Calibri&ts=24&tc=ffffff&tshs=1&tshc=222222&it=png&c=5&bgt=gradient&bgc=707070&ebgc=5c5c5c&hp=20&vp=11)
+](http://master.dl.sourceforge.net/project/logwatch-dotnet/LogWatch.application)
 
 ![LogWatch screenshot](http://i.imgur.com/1lSe8hK.png)
 
