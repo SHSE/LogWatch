@@ -13,7 +13,7 @@
     mc:Ignorable="d">
 
     <UserControl.DataContext>
-        <feature:StatsViewModel InfoDialog="{x:Static local:App.InfoDialog}" LogSourceInfo="{x:Static local:App.SourceInfo}" />
+        <feature:StatsViewModel InfoDialog="{x:Static local:DialogService.InfoDialog}" LogSourceInfo="{x:Static local:App.SourceInfo}" />
     </UserControl.DataContext>
 
     <Grid>

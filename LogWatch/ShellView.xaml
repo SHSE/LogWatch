@@ -6,6 +6,7 @@
     xmlns:local="clr-namespace:LogWatch"
     xmlns:mui="http://firstfloorsoftware.com/ModernUI"
     xmlns:records="clr-namespace:LogWatch.Features.Records"
+    xmlns:search="clr-namespace:LogWatch.Features.Search"
     xmlns:stats="clr-namespace:LogWatch.Features.Stats"
     xmlns:util="clr-namespace:LogWatch.Util"
     Title="{Binding Source={x:Static local:App.SourceInfo}, Path=Name, StringFormat='{}{0} - Log Watch'}"
@@ -14,6 +15,14 @@
     ContentSource="Features\Records\RecordsView.xaml"
     Icon="App.ico"
     Style="{StaticResource CompactWindow}">
+
+    <Window.InputBindings>
+        <KeyBinding
+            Key="F"
+            Command="Find"
+            CommandTarget="{Binding ElementName=SearchView}"
+            Modifiers="Control" />
+    </Window.InputBindings>
 
     <mui:ModernWindow.LogoData>
         <util:TextGeometry
@@ -48,15 +57,34 @@
     </Window.Resources>
 
     <Grid>
+        <Grid.InputBindings>
+            <KeyBinding
+                Key="Escape"
+                Command="Close"
+                CommandTarget="{Binding ElementName=SearchView}" />
+        </Grid.InputBindings>
+
         <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="80*" />
             <RowDefinition Height="22" />
             <RowDefinition Height="20*" MinHeight="16" />
         </Grid.RowDefinitions>
 
-        <records:RecordsView x:Name="Records" />
+        <search:SearchView x:Name="SearchView" />
 
-        <Grid Grid.Row="1">
+        <records:RecordsView x:Name="Records" Grid.Row="1" />
+
+        <GridSplitter
+            Grid.Row="2"
+            Height="3"
+            Margin="0,0,16,0"
+            VerticalAlignment="Top"
+            Background="Transparent"
+            Focusable="False"
+            ResizeBehavior="PreviousAndNext" />
+
+        <Grid Grid.Row="2" Focusable="False">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="*" />
@@ -90,15 +118,6 @@
                 Text="{Binding ViewModel.Records.Count, ElementName=Records, StringFormat='{}{0:#,0} records'}" />
         </Grid>
 
-        <details:RecordDetailsView Grid.Row="2" />
-
-        <GridSplitter
-            Grid.Row="1"
-            Height="3"
-            Margin="0,0,16,0"
-            VerticalAlignment="Top"
-            Background="Transparent"
-            ResizeBehavior="PreviousAndNext" />
+        <details:RecordDetailsView Grid.Row="3" />
     </Grid>
-
 </mui:ModernWindow>

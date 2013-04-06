@@ -26,7 +26,7 @@
     <UpdatePeriodically>true</UpdatePeriodically>
     <UpdateRequired>false</UpdateRequired>
     <MapFileExtensions>true</MapFileExtensions>
-    <UpdateUrl>http://localhost/LogWatch/</UpdateUrl>
+    <UpdateUrl>http://citylan.dl.sourceforge.net/project/logwatch-dotnet/</UpdateUrl>
     <TargetCulture>en</TargetCulture>
     <ProductName>LogWatch</ProductName>
     <PublisherName>Sergey Shumov</PublisherName>
@@ -144,15 +144,19 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="Controls\IconToggleButton.cs" />
+    <Compile Include="DialogService.cs" />
     <Compile Include="Features\Records\AutoSizeColumnBehaviour.cs" />
     <Compile Include="Features\Records\FilteredRecordCollection.cs" />
     <Compile Include="Features\Records\GoToIndexEventArgs.cs" />
+    <Compile Include="Features\Records\TimestampFormat.cs" />
     <Compile Include="Features\Records\VisibleItemsInfo.cs" />
     <Compile Include="Features\Records\VisibleItemsInfoBehaviour.cs" />
     <Compile Include="Features\Records\SelectItemByIndexAction.cs" />
     <Compile Include="Features\Search\SearchView.xaml.cs">
       <DependentUpon>SearchView.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Features\Search\SearchViewModel.cs" />
     <Compile Include="Features\SelectSource\SelectFormatView.xaml.cs">
       <DependentUpon>SelectFormatView.xaml</DependentUpon>
     </Compile>
@@ -164,10 +168,13 @@
     <Compile Include="Formats\ILogFormatMetadata.cs" />
     <Compile Include="Formats\LogFormatAttribute.cs" />
     <Compile Include="Formats\PlainTextLogFormat.cs" />
+    <Compile Include="Messages\RecordFilterChangedMessage.cs" />
     <Compile Include="Sources\LogSourceInfo.cs" />
     <Compile Include="Messages\NavigatedToRecordMessage.cs" />
     <Compile Include="Messages\RecordContextChangedMessage.cs" />
     <Compile Include="Messages\RecordSelectedMessage.cs" />
+    <Compile Include="Util\BooleanToOppositeConverter.cs" />
+    <Compile Include="Util\CommandBindingTrigger.cs" />
     <Compile Include="Util\AutoResetEventAsync.cs" />
     <Compile Include="Features\RecordDetails\ExceptionHighlighter.cs" />
     <Compile Include="Features\RecordDetails\RecordDetailsView.xaml.cs">
@@ -252,6 +259,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Styles\CompactWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Styles\IconToggleButton.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

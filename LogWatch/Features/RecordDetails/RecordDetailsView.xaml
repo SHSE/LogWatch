@@ -12,7 +12,7 @@
     mc:Ignorable="d">
 
     <UserControl.Resources>
-        <feature:RecordDetailsViewModel x:Key="ViewModel" ErrorDialog="{x:Static local:App.ErrorDialog}" />
+        <feature:RecordDetailsViewModel x:Key="ViewModel" ErrorDialog="{x:Static local:DialogService.ErrorDialog}" />
 
         <feature:ExceptionHighlighter
             x:Key="Highlighter"

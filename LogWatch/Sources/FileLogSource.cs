@@ -91,7 +91,7 @@ namespace LogWatch.Sources {
                 //if (count != segment.Length)
                 //    throw new ApplicationException("Segment mapping failed");
 
-                var record = this.logFormat.DeserializeRecord(new ArraySegment<byte>(buffer));
+                var record = this.logFormat.DeserializeRecord(new ArraySegment<byte>(buffer, 0, count));
 
                 if (record == null)
                     return null;
@@ -134,10 +134,11 @@ namespace LogWatch.Sources {
                     }
                 });
 
-                while (true) {
+                while (!cancellationToken.IsCancellationRequested) {
                     Interlocked.Exchange(ref this.streamLength, this.segmentsStream.Length);
-                 
-                    var startPosition = await this.logFormat.ReadSegments(observer, this.segmentsStream, cancellationToken);
+
+                    var startPosition =
+                        await this.logFormat.ReadSegments(observer, this.segmentsStream, cancellationToken);
 
                     await this.fileChanged.WaitAsync(cancellationToken);
 
@@ -152,7 +153,7 @@ namespace LogWatch.Sources {
             var index = 0;
 
             using (this.status.Subscribe(_ => statusChanged.Set()))
-                while (true) {
+                while (!cancellationToken.IsCancellationRequested) {
                     await statusChanged.WaitAsync(cancellationToken);
 
                     for (; index < this.segments.Count; index++) {

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Linq;
+using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -9,10 +10,8 @@ using LogWatch.Sources;
 namespace LogWatch.Features.Records {
     public class FilteredRecordCollection : RecordCollection {
         private readonly Predicate<Record> filter;
-        private readonly ConcurrentDictionary<int, int> recordIndexByLocalIndex = new ConcurrentDictionary<int, int>();
         private readonly ConcurrentDictionary<int, int> localIndexByRecordIndex = new ConcurrentDictionary<int, int>();
-
-        private int count = -1;
+        private readonly ConcurrentDictionary<int, int> recordIndexByLocalIndex = new ConcurrentDictionary<int, int>();
 
         public FilteredRecordCollection(ILogSource logSource, Predicate<Record> filter) : base(logSource) {
             this.filter = filter;
@@ -26,27 +25,37 @@ namespace LogWatch.Features.Records {
         }
 
         protected override IDisposable UpdateState() {
+            var sampler = Observable
+                .Return(0L, this.Scheduler)
+                .Delay(TimeSpan.FromMilliseconds(100), this.Scheduler)
+                .Concat(Observable.Timer(TimeSpan.Zero, TimeSpan.FromSeconds(2), this.Scheduler));
+
             return this.LogSource.Records
-                       .Buffer(TimeSpan.FromMilliseconds(2000), 2*1024, Scheduler)
+                       .Buffer(sampler)
                        .Where(batch => batch.Count > 0)
                        .Select(batch => new {
                            Filtered = batch.AsParallel().Where(record => this.filter(record)).ToArray(),
                            Progress = batch.Max(record => record.SourceStatus.Progress)
                        })
-                       .ObserveOnDispatcher()
+                       .ObserveOn(new SynchronizationContextScheduler(SynchronizationContext.Current))
                        .Subscribe(x => {
                            this.Progress = x.Progress;
 
                            var batch = x.Filtered;
 
                            if (batch.Length > 0) {
+                               var filteredIndex = this.Count;
+                               var isProcessingSavedData = false;
+
                                foreach (var record in batch) {
-                                   var filteredIndex = Interlocked.Increment(ref this.count);
+                                   isProcessingSavedData = record.SourceStatus.IsProcessingSavedData;
                                    this.recordIndexByLocalIndex.TryAdd(filteredIndex, record.Index);
                                    this.localIndexByRecordIndex.TryAdd(record.Index, filteredIndex);
+                                   filteredIndex++;
                                }
 
                                this.Count += batch.Length;
+                               this.IsProcessingSavedData = isProcessingSavedData;
                                this.OnCollectionReset();
                            }
                        });
@@ -63,6 +72,7 @@ namespace LogWatch.Features.Records {
                 record = new Record();
 
             record.Index = index;
+            record.DisplayIndex = actualIndex;
 
             return record;
         }

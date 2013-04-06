@@ -103,17 +103,6 @@
                                                 Fill="White"
                                                 Stretch="Uniform" />
 
-                                            <!--
-                                                <Image
-                                                Width="20"
-                                                Height="20"
-                                                Margin="12,4,0,0"
-                                                HorizontalAlignment="Center"
-                                                VerticalAlignment="Center"
-                                                Source="{TemplateBinding Icon}"
-                                                Stretch="Uniform" />
-                                            -->
-
                                             <!--  title  -->
                                             <TextBlock
                                                 Grid.Column="1"

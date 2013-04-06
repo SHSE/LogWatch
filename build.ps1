@@ -10,7 +10,7 @@ if (!(Test-Path .\Tools\xunit\xunit.console.clr4.x86.exe)) {
     $destination.Copyhere($zip_file.items())
 }
 
-C:\Windows\Microsoft.NET\Framework\v4.0.30319\MSBuild.exe .\LogWatch.Tests\LogWatch.Tests.csproj
+C:\Windows\Microsoft.NET\Framework\v4.0.30319\MSBuild.exe .\LogWatch.Tests\LogWatch.Tests.csproj /p:DownloadNuGetExe=True
 
 if ($LASTEXITCODE -ne 0) {
     throw "Failed to build tests project"
@@ -22,7 +22,7 @@ if ($LASTEXITCODE -ne 0) {
     throw "Huston, we have a problem!"
 }
 
-C:\Windows\Microsoft.NET\Framework\v4.0.30319\MSBuild.exe .\LogWatch\LogWatch.csproj /t:publish /p:Configuration=Release
+C:\Windows\Microsoft.NET\Framework\v4.0.30319\MSBuild.exe .\LogWatch\LogWatch.csproj /t:publish /p:Configuration=Release /p:DownloadNuGetExe=True
 
 if ($LASTEXITCODE -ne 0) {
     throw "Publishing failed"

@@ -10,6 +10,7 @@
                 <ResourceDictionary Source="/FirstFloor.ModernUI;component/Assets/ModernUI.Dark.xaml" />
                 <ResourceDictionary Source="/LogWatch;component/Styles/CompactMenu.xaml" />
                 <ResourceDictionary Source="/LogWatch;component/Styles/CompactWindow.xaml" />
+                <ResourceDictionary Source="/LogWatch;component/Styles/IconToggleButton.xaml" />
             </ResourceDictionary.MergedDictionaries>
 
             <SolidColorBrush x:Key="LogLevelTrace" Color="Gray" />

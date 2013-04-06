@@ -1,18 +1,15 @@
 ﻿using System;
 using System.ComponentModel.Composition;
 using System.ComponentModel.Composition.Hosting;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.ExceptionServices;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Threading;
-using FirstFloor.ModernUI.Windows.Controls;
 using LogWatch.Features.SelectSource;
 using LogWatch.Formats;
 using LogWatch.Sources;
-using Microsoft.Win32;
 
 namespace LogWatch {
     public sealed partial class App {
@@ -27,35 +24,15 @@ namespace LogWatch {
                     Current.Dispatcher.Invoke(() => HandleException(exception));
             };
 
-        public static readonly Func<string> OpenFileDialog =
-            () => {
-                var dialog = new OpenFileDialog {
-                    CheckFileExists = true,
-                    CheckPathExists = true
-                };
-
-                if (dialog.ShowDialog() == true)
-                    return dialog.FileName;
-
-                return null;
-            };
-
-        public static readonly Action<string> ErrorDialog =
-            message => ModernDialog.ShowMessage(message, "Error", MessageBoxButton.OK);
-
-        public static readonly Action<string> InfoDialog =
-            message => ModernDialog.ShowMessage(message, "Log Watch", MessageBoxButton.OK);
-
         private static readonly Func<string, bool> CollectStatsOnDemand =
             filePath => new FileInfo(filePath).Length >= 10*1024*1024;
 
-        private static readonly CompositionContainer Container = new CompositionContainer(
-            new AssemblyCatalog(typeof (App).Assembly));
+        private static CompositionContainer container;
 
         public static readonly Func<Stream, ILogFormat> SelectFormat = stream => {
             var formatSelector = new AutoLogFormatSelector();
 
-            Container.SatisfyImportsOnce(formatSelector);
+            container.SatisfyImportsOnce(formatSelector);
 
             var logFormats = formatSelector.SelectFormat(stream).ToArray();
 
@@ -73,23 +50,23 @@ namespace LogWatch {
 
             viewModel.Formats.Add(
                 new Lazy<ILogFormat, ILogFormatMetadata>(
-                () => new PlainTextLogFormat(),
-                new LogFormatAttribute("Plain text")));
+                    () => new PlainTextLogFormat(),
+                    new LogFormatAttribute("Plain text")));
 
             return view.ShowDialog() != true ? null : viewModel.Format;
         };
 
         public static readonly Func<string, LogSourceInfo> CreateFileLogSource = filePath => {
-            ILogFormat logFormat;
+            ILogFormat format;
 
             using (var stream = File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
-                logFormat = SelectFormat(stream);
+                format = SelectFormat(stream);
 
-            if (logFormat == null)
+            if (format == null)
                 return null;
 
             return new LogSourceInfo(
-                new FileLogSource(filePath, logFormat),
+                new FileLogSource(filePath, format),
                 filePath,
                 false,
                 CollectStatsOnDemand(filePath));
@@ -97,10 +74,16 @@ namespace LogWatch {
 
         public static LogSourceInfo SourceInfo { get; set; }
 
+        public static ILogSource Source {
+            get { return SourceInfo == null ? null : SourceInfo.Source; }
+        }
+
         protected override void OnStartup(StartupEventArgs e) {
             base.OnStartup(e);
 
             TaskScheduler.UnobservedTaskException += (sender, args) => HandleException(args.Exception);
+
+            container = new CompositionContainer(new AssemblyCatalog(typeof (App).Assembly));
 
             var activationArguments = AppDomain.CurrentDomain.SetupInformation.ActivationArguments;
             var activationData = activationArguments != null ? activationArguments.ActivationData : null;
@@ -132,7 +115,7 @@ namespace LogWatch {
         }
 
         private void OnDispatcherUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e) {
-            ErrorDialog(e.Exception.ToString());
+            DialogService.ErrorDialog(e.Exception.ToString());
 
             if (e.Exception is ApplicationException)
                 e.Handled = true;

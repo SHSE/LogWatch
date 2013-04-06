@@ -11,51 +11,64 @@ using Moq;
 using Xunit;
 
 namespace LogWatch.Tests {
-    public class RecordCollectionTests {
-        private readonly RecordCollection collection;
+    public class FilteredRecordCollectionTests {
+        private readonly FilteredRecordCollection collection;
         private readonly Mock<ILogSource> logSource;
         private readonly Subject<LogSourceStatus> status = new Subject<LogSourceStatus>();
+        private readonly Subject<Record> records = new Subject<Record>();
         private readonly TestScheduler testScheduler;
 
-        public RecordCollectionTests() {
+        private Predicate<Record> filter;
+
+        public FilteredRecordCollectionTests() {
             SynchronizationContext.SetSynchronizationContext(new TestSynchronizationContext());
 
             this.testScheduler = new TestScheduler();
             this.logSource = new Mock<ILogSource>(MockBehavior.Strict);
 
             this.logSource.SetupGet(x => x.Status).Returns(this.status.ObserveOn(this.testScheduler));
+            this.logSource.SetupGet(x => x.Records).Returns(this.records.ObserveOn(this.testScheduler));
 
-            this.collection = new RecordCollection(this.logSource.Object) {Scheduler = this.testScheduler};
+            this.collection = new FilteredRecordCollection(this.logSource.Object, record => this.filter(record)) {
+                Scheduler = this.testScheduler
+            };
+
             this.collection.Initialize();
         }
 
         [Fact]
-        public void LoadsRecord() {
+        public void LoadsFilteredRecord() {
             this.logSource
                 .Setup(x => x.ReadRecordAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
-                .Returns((int index, CancellationToken token) => Task.FromResult(new Record {Index = index}));
+                .Returns(Task.FromResult(new Record {Index = 1}));
 
-            this.status.OnNext(new LogSourceStatus(2, true, 100));
+            this.filter = record => record.Message == "B";
+
+            this.records.OnNext(new Record {Index = 0, Message = "A"});
+            this.records.OnNext(new Record {Index = 1, Message = "B"});
 
             this.testScheduler.AdvanceBy(TimeSpan.FromMinutes(5).Ticks);
 
-            var task = this.collection.GetRecordAsync(1, CancellationToken.None);
+            var task = this.collection.GetRecordAsync(0, CancellationToken.None);
 
             this.testScheduler.AdvanceBy(TimeSpan.FromMinutes(5).Ticks);
 
-            Assert.True(task.Result.IsLoaded);
-            Assert.Equal(1, task.Result.Index);
+            Assert.Equal(0, task.Result.Index);
         }
 
         [Fact(Timeout = 30000)]
-        public void LoadsRequestedRecords() {
+        public void LoadsRequestedFilteredRecords() {
             this.logSource
                 .Setup(x => x.ReadRecordAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
                 .Returns(
                     (int index, CancellationToken cancellationToken) => Task.FromResult(new Record {Index = index}));
 
-            this.status.OnNext(new LogSourceStatus(2, true, 100));
-            
+            this.filter = record => record.Message == "B";
+
+            this.records.OnNext(new Record {Index = 3, Message = "A"});
+            this.records.OnNext(new Record {Index = 4, Message = "B"});
+            this.records.OnNext(new Record {Index = 5, Message = "B"});
+
             this.testScheduler.AdvanceBy(TimeSpan.FromMinutes(5).Ticks);
 
             var record1 = this.collection[0];
@@ -72,35 +85,18 @@ namespace LogWatch.Tests {
         }
 
         [Fact]
-        public void UpdatesLoadingRecordCount() {
-            var completionSource = new TaskCompletionSource<Record>();
+        public void UpdatesStatus() {
+             this.filter = record => record.Message == "B";
 
-            this.logSource
-                .Setup(x => x.ReadRecordAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
-                .Returns(completionSource.Task);
+            this.records.OnNext(new Record {Index = 3, Message = "A", SourceStatus = new LogSourceStatus(10, true, 20)});
+            this.records.OnNext(new Record {Index = 4, Message = "B", SourceStatus = new LogSourceStatus(10, true, 21)});
+            this.records.OnNext(new Record {Index = 5, Message = "B", SourceStatus = new LogSourceStatus(10, true, 22)});
 
-            this.status.OnNext(new LogSourceStatus(2, true, 100));
-            
             this.testScheduler.AdvanceBy(TimeSpan.FromMinutes(5).Ticks);
 
-            var record = this.collection[1];
-
-            Assert.NotNull(record);
-
-            var count = this.collection.LoadingRecordCount.FirstAsync().ToTask().Result;
-
-            Assert.Equal(1, count);
-        }
-
-        [Fact]
-        public void UpdatesStatus() {
-            this.status.OnNext(new LogSourceStatus(7, true, 20));
-
-            this.testScheduler.AdvanceBy(TimeSpan.FromMinutes(1).Ticks);
-
-            Assert.Equal(7, this.collection.Count);
+            Assert.Equal(2, this.collection.Count);
             Assert.True(this.collection.IsProcessingSavedData);
-            Assert.Equal(20, this.collection.Progress);
+            Assert.Equal(22, this.collection.Progress);
         }
     }
 }

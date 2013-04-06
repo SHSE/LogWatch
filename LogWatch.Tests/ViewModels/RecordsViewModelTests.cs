@@ -43,7 +43,7 @@ namespace LogWatch.Tests.ViewModels {
 
         [Fact]
         public void SelectsRecord() {
-            this.viewModel.SelectRecordCommand.Execute(this.viewModel.Records[1]);
+            this.viewModel.SelectRecordCommand.Execute(new Record {Index = 1});
 
             var message = this.testMessenger.SentMessages.OfType<RecordSelectedMessage>().Single();
 

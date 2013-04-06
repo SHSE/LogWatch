@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Specialized;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Reactive.Concurrency;
@@ -27,16 +28,15 @@ namespace LogWatch.Features.Records {
         private readonly NotifyCollectionChangedEventArgs collectionResetArgs;
         private readonly ReplaySubject<int> loadingRecordCountSubject = new ReplaySubject<int>(1);
         private readonly ILogSource logSource;
-
         private readonly Subject<int> requestedResocords = new Subject<int>();
         private readonly CancellationTokenSource tokenSource;
         private readonly TaskScheduler uiScheduler;
+        
         private int count;
-
         private bool isDisposed;
         private bool isInitialized;
         private bool isProcessingSavedData;
-        private IDisposable loadRecord;
+        private IDisposable loadRecords;
         private int loadingRecordCount;
         private int progress;
         private IDisposable updateState;
@@ -85,7 +85,7 @@ namespace LogWatch.Features.Records {
             this.isDisposed = true;
             this.tokenSource.Cancel();
             this.updateState.Dispose();
-            this.loadRecord.Dispose();
+            this.loadRecords.Dispose();
 
             GC.SuppressFinalize(this);
         }
@@ -95,7 +95,7 @@ namespace LogWatch.Features.Records {
         }
 
         public bool Contains(object value) {
-            return true;
+            return this.Contains((Record) value);
         }
 
         void IList.Clear() {
@@ -187,8 +187,9 @@ namespace LogWatch.Features.Records {
         }
 
         public int IndexOf(Record item) {
-            if (item == null)
+            if (item == null || !this.Contains(item))
                 return -1;
+
             return item.Index;
         }
 
@@ -202,6 +203,9 @@ namespace LogWatch.Features.Records {
 
         public Record this[int index] {
             get {
+                if (index >= this.count)
+                    return null;
+
                 var isNew = false;
 
                 var record = this.cache.GetOrAdd(index, key => {
@@ -228,7 +232,7 @@ namespace LogWatch.Features.Records {
 
             this.updateState = this.UpdateState();
 
-            this.loadRecord =
+            this.loadRecords =
                 this.requestedResocords
                     .Buffer(TimeSpan.FromMilliseconds(300), this.Scheduler)
                     .Where(batch => batch.Count > 0)
@@ -275,7 +279,7 @@ namespace LogWatch.Features.Records {
             batch = batch.Reverse().Take(this.CacheSize).Reverse().ToArray();
 
             foreach (var index in batch) {
-                var loaded = await this.LoadRecordAsync(index).ConfigureAwait(false);
+                var loaded = await this.LoadRecordAsync(index);
 
                 loaded.IsLoaded = true;
 
@@ -299,6 +303,7 @@ namespace LogWatch.Features.Records {
                         record.Exception = loaded.Exception;
                         record.Timestamp = loaded.Timestamp;
                         record.Attributes = loaded.Attributes;
+                        record.DisplayIndex = loaded.DisplayIndex;
                     }, this.CancellationToken,
                         TaskCreationOptions.None,
                         this.uiScheduler);
@@ -310,8 +315,11 @@ namespace LogWatch.Features.Records {
         }
 
         protected virtual async Task<Record> LoadRecordAsync(int index) {
-            return await this.logSource.ReadRecordAsync(index, this.tokenSource.Token) ??
-                   new Record {Index = index};
+            var record = await this.logSource.ReadRecordAsync(index, this.tokenSource.Token) ?? new Record {Index = index};
+
+            record.DisplayIndex = index;
+
+            return record;
         }
 
         private void RequestRecord(int index) {
@@ -319,65 +327,29 @@ namespace LogWatch.Features.Records {
             this.requestedResocords.OnNext(index);
         }
 
-        public async Task<Record> GetRecordAsync(int index, CancellationToken cancellationToken) {
-            var isNew = false;
+        public Task<Record> GetRecordAsync(int index, CancellationToken cancellationToken) {
+            if (index >= this.count)
+                return Task.FromResult<Record>(null);
 
-            var record = this.cache.GetOrAdd(index, key => {
-                isNew = true;
-                return new Record {Index = key};
-            });
+            var record = this[index];
 
-            if (isNew)
-                lock (this.cacheSlots)
-                    this.cacheSlots.Enqueue(index);
+            var tcs = new TaskCompletionSource<Record>(cancellationToken);
+
+            PropertyChangedEventHandler handler = null;
+
+            handler = (sender, args) => {
+                record.PropertyChanged -= handler;
+
+                if (args.PropertyName == "IsLoaded" && record.IsLoaded)
+                    tcs.TrySetResult(record);
+            };
+
+            record.PropertyChanged += handler;
 
             if (record.IsLoaded)
-                return record;
+                tcs.TrySetResult(record);
 
-            record = await this.LoadRecordAsync(index, cancellationToken).ConfigureAwait(false);
-
-            this.CleanCache();
-
-            return record;
-        }
-
-        private async Task<Record> LoadRecordAsync(int index, CancellationToken cancellationToken) {
-            this.loadingRecordCountSubject.OnNext(Interlocked.Increment(ref this.loadingRecordCount));
-
-            var loaded = await this.logSource.ReadRecordAsync(index, cancellationToken).ConfigureAwait(false);
-
-            if (loaded != null)
-                loaded.IsLoaded = true;
-
-            var isUpdated = false;
-
-            var record = this.cache.AddOrUpdate(
-                index,
-                loaded,
-                (key, existed) => {
-                    if (existed.IsLoaded)
-                        return existed;
-
-                    isUpdated = true;
-
-                    existed.IsLoaded = true;
-
-                    return existed;
-                });
-
-            if (isUpdated && loaded != null)
-                await Task.Factory.StartNew(() => {
-                    record.Message = loaded.Message;
-                    record.Level = loaded.Level;
-                    record.Logger = loaded.Logger;
-                    record.Exception = loaded.Exception;
-                    record.Timestamp = loaded.Timestamp;
-                    record.Attributes = loaded.Attributes;
-                }, cancellationToken, TaskCreationOptions.None, this.uiScheduler);
-
-            this.loadingRecordCountSubject.OnNext(Interlocked.Decrement(ref this.loadingRecordCount));
-
-            return record;
+            return tcs.Task;
         }
 
         private void CleanCache() {

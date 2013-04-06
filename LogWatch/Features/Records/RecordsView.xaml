@@ -129,7 +129,7 @@
                                     <TextBlock
                                         HorizontalAlignment="Left"
                                         Style="{StaticResource RecordCellStyle}"
-                                        Text="{Binding Index}"
+                                        Text="{Binding DisplayIndex}"
                                         TextAlignment="Left" />
                                 </DataTemplate>
                             </GridViewColumn.CellTemplate>

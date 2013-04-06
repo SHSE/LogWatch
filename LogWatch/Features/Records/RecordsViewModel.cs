@@ -10,8 +10,9 @@ using LogWatch.Messages;
 using LogWatch.Sources;
 
 namespace LogWatch.Features.Records {
-    public class RecordsViewModel : ViewModelBase {
+    public sealed class RecordsViewModel : ViewModelBase {
         private bool autoScroll;
+        private bool isFilterActive;
         private RecordCollection records;
         private TimestampFormat timestampFormat;
 
@@ -22,7 +23,9 @@ namespace LogWatch.Features.Records {
             this.Scheduler = System.Reactive.Concurrency.Scheduler.Default;
             this.SelectRecordCommand = new RelayCommand<Record>(this.SelectRecord);
             this.SetTimestampFormatCommand = new RelayCommand<TimestampFormat>(format => this.TimestampFormat = format);
+
             this.MessengerInstance.Register<NavigatedToRecordMessage>(this, this.OnNavigateToRecord);
+            this.MessengerInstance.Register<RecordFilterChangedMessage>(this, this.OnFilterChanged);
         }
 
         public RecordCollection Records {
@@ -62,7 +65,28 @@ namespace LogWatch.Features.Records {
             set { this.Set(ref this.timestampFormat, value); }
         }
 
-        public RelayCommand<TimestampFormat> SetTimestampFormatCommand { get;  set; }
+        public RelayCommand<TimestampFormat> SetTimestampFormatCommand { get; set; }
+
+        private void OnFilterChanged(RecordFilterChangedMessage message) {
+            var oldCollection = this.records;
+
+            if (!this.isFilterActive && message.Filter == null)
+                return;
+
+            if (oldCollection != null)
+                oldCollection.Dispose();
+
+            this.isFilterActive = message.Filter != null;
+
+            var newCollection =
+                this.isFilterActive
+                    ? new FilteredRecordCollection(this.LogSourceInfo.Source, message.Filter)
+                    : new RecordCollection(this.LogSourceInfo.Source);
+
+            newCollection.Initialize();
+
+            this.Records = newCollection;
+        }
 
         private void Set<T>(ref T field, T newValue, [CallerMemberName] string propertyName = null) {
             this.Set(propertyName, ref field, newValue, false);
@@ -85,10 +109,5 @@ namespace LogWatch.Features.Records {
 
         [UsedImplicitly]
         public event EventHandler Navigated = (sender, args) => { };
-    }
-
-    public enum TimestampFormat {
-        Short,
-        Long
     }
 }

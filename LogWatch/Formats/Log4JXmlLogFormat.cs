@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -52,41 +53,57 @@ namespace LogWatch.Formats {
             IObserver<RecordSegment> observer,
             Stream stream,
             CancellationToken cancellationToken) {
-            var offset = stream.Position;
+            var lastOffset = stream.Position;
 
             var buffer = new byte[this.BufferSize];
+            var kmpStateStart = 0;
+            var kmpStateEnd = 0;
+            var lastStartOffesets = new long[0];
 
             while (true) {
-                stream.Position = offset;
+                var baseOffset = stream.Position;
 
                 var count = await stream.ReadAsync(buffer, 0, buffer.Length, cancellationToken);
 
                 if (count == 0)
-                    return offset;
+                    return lastOffset;
 
                 var startOffsets = KmpUtil.GetOccurences(
                     EventStart,
                     new ArraySegment<byte>(buffer, 0, count),
-                    cancellationToken);
+                    cancellationToken,
+                    ref kmpStateStart);
 
                 var endOffsets = KmpUtil.GetOccurences(
                     EventEnd,
                     new ArraySegment<byte>(buffer, 0, count),
-                    cancellationToken);
+                    cancellationToken,
+                    ref kmpStateEnd);
 
-                if (startOffsets.Count == 0 || endOffsets.Count == 0)
-                    return offset;
+                if (endOffsets.Count == 0 || (startOffsets.Count + lastStartOffesets.Length) == 0)
+                    return lastOffset;
 
-                var baseOffset = offset;
                 var segments = endOffsets.Zip(
-                    startOffsets.Take(endOffsets.Count),
+                    lastStartOffesets
+                        .Concat(startOffsets.Select(offset => baseOffset + offset))
+                        .Take(endOffsets.Count),
                     (end, start) =>
-                    new RecordSegment(baseOffset + start, (int) (end + EventEnd.Length - start)));
+                    new RecordSegment(start, (int) (baseOffset + end + EventEnd.Length - start)));
 
+                var empty = true;
                 foreach (var segment in segments) {
+                    empty = false;
                     observer.OnNext(segment);
-                    offset = segment.End;
+                    lastOffset = segment.End;
                 }
+
+                if (empty)
+                    return lastOffset;
+
+                lastStartOffesets = lastStartOffesets
+                    .Concat(startOffsets.Select(x => baseOffset + x))
+                    .Skip(endOffsets.Count)
+                    .ToArray();
             }
         }
 

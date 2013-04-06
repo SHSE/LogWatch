@@ -96,6 +96,39 @@ namespace LogWatch.Util {
             }
 
             return occurences;
+        } 
+        
+        public static IReadOnlyList<long> GetOccurences(
+            byte[] pattern,
+            ArraySegment<byte> bufferSegment,
+            CancellationToken cancellationToken,
+            ref int m) {
+            var transitions = CreatePrefixArray(pattern);
+            var occurences = new List<long>();
+            var buffer = bufferSegment.Array;
+
+            for (var i = bufferSegment.Offset; i < bufferSegment.Count; i++) {
+                cancellationToken.ThrowIfCancellationRequested();
+
+                if (buffer[i] == pattern[m])
+                    m++;
+                else {
+                    var prefix = transitions[m];
+
+                    if (prefix + 1 > pattern.Length &&
+                        buffer[i] != pattern[prefix + 1])
+                        m = 0;
+                    else
+                        m = prefix;
+                }
+
+                if (m == pattern.Length) {
+                    occurences.Add(i - (pattern.Length - 1));
+                    m = transitions[m - 1];
+                }
+            }
+
+            return occurences;
         }
 
         private static int[] CreatePrefixArray(byte[] pattern) {
