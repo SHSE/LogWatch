@@ -75,15 +75,6 @@
 
         <records:RecordsView x:Name="Records" Grid.Row="1" />
 
-        <GridSplitter
-            Grid.Row="2"
-            Height="3"
-            Margin="0,0,16,0"
-            VerticalAlignment="Top"
-            Background="Transparent"
-            Focusable="False"
-            ResizeBehavior="PreviousAndNext" />
-
         <Grid Grid.Row="2" Focusable="False">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto" />
@@ -117,6 +108,14 @@
                 VerticalAlignment="Center"
                 Text="{Binding ViewModel.Records.Count, ElementName=Records, StringFormat='{}{0:#,0} records'}" />
         </Grid>
+
+        <GridSplitter
+            Grid.Row="2"
+            Height="3"
+            Margin="0,0,16,0"
+            VerticalAlignment="Top"
+            Background="Transparent"
+            ResizeBehavior="PreviousAndNext" />
 
         <details:RecordDetailsView Grid.Row="3" />
     </Grid>

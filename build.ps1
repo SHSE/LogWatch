@@ -22,13 +22,17 @@ if ($LASTEXITCODE -ne 0) {
     throw "Huston, we have a problem!"
 }
 
-C:\Windows\Microsoft.NET\Framework\v4.0.30319\MSBuild.exe .\LogWatch\LogWatch.csproj /t:publish /p:Configuration=Release /p:DownloadNuGetExe=True
+C:\Windows\Microsoft.NET\Framework\v4.0.30319\MSBuild.exe .\LogWatch\LogWatch.csproj `
+    /t:publish `
+    /p:Configuration=Release `
+    /p:DownloadNuGetExe=True `
+    /p:ApplicationVersion=$env:ApplicationVersion
 
 if ($LASTEXITCODE -ne 0) {
     throw "Publishing failed"
 }
 
 Remove-Item .\Build -ErrorAction SilentlyContinue -Recurse -Force
-New-Item .\Build -ItemType Directory
+New-Item .\Build -ItemType Directory -ErrorAction SilentlyContinue
 
-Copy-Item .\LogWatch\bin\Release\app.publish\* .\Build -Recurse
+Copy-Item .\LogWatch\bin\Release\app.publish\* .\Build -Recurse -Force
