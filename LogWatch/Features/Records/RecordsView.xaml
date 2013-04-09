@@ -97,6 +97,7 @@
             ScrollViewer.IsDeferredScrollingEnabled="True"
             SelectionMode="Single"
             SizeChanged="Records_OnSizeChanged"
+            VirtualizingPanel.CacheLength="20"
             VirtualizingPanel.IsVirtualizing="True"
             VirtualizingPanel.VirtualizationMode="Recycling">
 

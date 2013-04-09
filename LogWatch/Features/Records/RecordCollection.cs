@@ -31,7 +31,7 @@ namespace LogWatch.Features.Records {
         private readonly Subject<int> requestedResocords = new Subject<int>();
         private readonly CancellationTokenSource tokenSource;
         private readonly TaskScheduler uiScheduler;
-        
+
         private int count;
         private bool isDisposed;
         private bool isInitialized;
@@ -208,18 +208,19 @@ namespace LogWatch.Features.Records {
 
                 var isNew = false;
 
-                var record = this.cache.GetOrAdd(index, key => {
-                    isNew = true;
-                    return new Record {Index = key};
-                });
+                lock (this.cacheSlots) {
+                    var record = this.cache.GetOrAdd(index, key => {
+                        isNew = true;
+                        return new Record {Index = key};
+                    });
 
-                if (isNew) {
-                    lock (this.cacheSlots)
+                    if (isNew) {
                         this.cacheSlots.Enqueue(index);
-                    this.RequestRecord(index);
-                }
+                        this.RequestRecord(index);
+                    }
 
-                return record;
+                    return record;
+                }
             }
             set { throw new NotSupportedException(); }
         }
@@ -234,7 +235,7 @@ namespace LogWatch.Features.Records {
 
             this.loadRecords =
                 this.requestedResocords
-                    .Buffer(TimeSpan.FromMilliseconds(300), this.Scheduler)
+                    .Buffer(TimeSpan.FromMilliseconds(100), this.Scheduler)
                     .Where(batch => batch.Count > 0)
                     .Subscribe(this.LoadRecordsAsync);
 
@@ -284,29 +285,23 @@ namespace LogWatch.Features.Records {
                 loaded.IsLoaded = true;
 
                 var isUpdated = false;
+                
+                lock (this.cacheSlots) {
+                    var record = this.cache.AddOrUpdate(index, loaded, (key, existed) => {
+                        if (existed.IsLoaded)
+                            return existed;
 
-                var record = this.cache.AddOrUpdate(index, loaded, (key, existed) => {
-                    if (existed.IsLoaded)
+                        existed.IsLoaded = true;
+                        isUpdated = true;
+
                         return existed;
+                    });
 
-                    existed.IsLoaded = true;
-                    isUpdated = true;
-
-                    return existed;
-                });
-
-                if (isUpdated)
-                    await Task.Factory.StartNew(() => {
-                        record.Message = loaded.Message;
-                        record.Level = loaded.Level;
-                        record.Logger = loaded.Logger;
-                        record.Exception = loaded.Exception;
-                        record.Timestamp = loaded.Timestamp;
-                        record.Attributes = loaded.Attributes;
-                        record.DisplayIndex = loaded.DisplayIndex;
-                    }, this.CancellationToken,
-                        TaskCreationOptions.None,
-                        this.uiScheduler);
+                    if (isUpdated)
+                        this.UpdateRecord(record, loaded);
+                    else
+                        this.cacheSlots.Enqueue(index);
+                }
 
                 this.loadingRecordCountSubject.OnNext(Interlocked.Decrement(ref this.loadingRecordCount));
             }
@@ -314,8 +309,23 @@ namespace LogWatch.Features.Records {
             this.CleanCache();
         }
 
+        private void UpdateRecord(Record existed, Record newRecord) {
+            Task.Factory.StartNew(() => {
+                existed.Message = newRecord.Message;
+                existed.Level = newRecord.Level;
+                existed.Logger = newRecord.Logger;
+                existed.Exception = newRecord.Exception;
+                existed.Timestamp = newRecord.Timestamp;
+                existed.Attributes = newRecord.Attributes;
+                existed.DisplayIndex = newRecord.DisplayIndex;
+            }, this.CancellationToken,
+                TaskCreationOptions.None,
+                this.uiScheduler);
+        }
+
         protected virtual async Task<Record> LoadRecordAsync(int index) {
-            var record = await this.logSource.ReadRecordAsync(index, this.tokenSource.Token) ?? new Record {Index = index};
+            var record = await this.logSource.ReadRecordAsync(index, this.tokenSource.Token) ??
+                         new Record {Index = index};
 
             record.DisplayIndex = index;
 
@@ -353,16 +363,15 @@ namespace LogWatch.Features.Records {
         }
 
         private void CleanCache() {
-            lock (this.cacheSlots) {
-                int index;
+            int index;
 
+            lock (this.cacheSlots)
                 while (this.cache.Count > this.CacheSize)
                     if (this.cacheSlots.TryDequeue(out index)) {
                         Record _;
                         this.cache.TryRemove(index, out _);
                     } else if (this.cacheSlots.Count == 0 && this.cache.Count > 0)
                         Debugger.Break();
-            }
         }
 
         ~RecordCollection() {
