@@ -49,7 +49,8 @@ $versionDirName = (Get-Item '.\Build\Application Files\LogWatch*').Name
 @('cd /home/pfs/project/logwatch-dotnet',
   'del LogWatch.application',
   'del setup.exe',
-  'mput *.*',
+  'put .\Build\LogWatch.application',
+  'put .\Build\setup.exe',
   'cd "Application Files"',
   "mkdir `"$versionDirName`"",
   "cd $versionDirName",
@@ -59,4 +60,4 @@ $versionDirName = (Get-Item '.\Build\Application Files\LogWatch*').Name
   "mput `"Build\Application Files\$versionDirName\en\*.*`"") `
   | Add-Content .\Tools\deploy.psftp
 
-.\Tools\psftp.exe -l sergey-shumov frs.sourceforge.net -b .\Tools\deploy.psftp
+.\Tools\psftp.exe -l sergey-shumov frs.sourceforge.net -be -b .\Tools\deploy.psftp
