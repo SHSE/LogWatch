@@ -1,10 +1,8 @@
 ﻿using System;
 using System.Collections;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.Linq;
 using System.Reactive.Concurrency;
 using System.Reactive.Linq;
@@ -23,12 +21,12 @@ namespace LogWatch.Features.Records {
         IReadOnlyList<Record>,
         INotifyCollectionChanged,
         IDisposable {
-        private readonly ConcurrentDictionary<int, Record> cache;
-        private readonly ConcurrentQueue<int> cacheSlots;
+        private readonly Dictionary<int, Record> cache;
+        private readonly Queue<int> cacheSlots;
         private readonly NotifyCollectionChangedEventArgs collectionResetArgs;
         private readonly ReplaySubject<int> loadingRecordCountSubject = new ReplaySubject<int>(1);
         private readonly ILogSource logSource;
-        private readonly Subject<int> requestedResocords = new Subject<int>();
+        private readonly Subject<Record> requestedResocords = new Subject<Record>();
         private readonly CancellationTokenSource tokenSource;
         private readonly TaskScheduler uiScheduler;
 
@@ -46,8 +44,8 @@ namespace LogWatch.Features.Records {
             this.logSource = logSource;
             this.tokenSource = new CancellationTokenSource();
             this.collectionResetArgs = new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset);
-            this.cache = new ConcurrentDictionary<int, Record>();
-            this.cacheSlots = new ConcurrentQueue<int>();
+            this.cache = new Dictionary<int, Record>();
+            this.cacheSlots = new Queue<int>();
             this.uiScheduler = TaskScheduler.FromCurrentSynchronizationContext();
             this.Scheduler = System.Reactive.Concurrency.Scheduler.Default;
         }
@@ -165,9 +163,7 @@ namespace LogWatch.Features.Records {
         }
 
         public bool Contains(Record item) {
-            if (item == null)
-                return false;
-            return item.Index < this.Count;
+            return item.Index < this.count;
         }
 
         public void CopyTo(Record[] array, int arrayIndex) {
@@ -187,7 +183,7 @@ namespace LogWatch.Features.Records {
         }
 
         public int IndexOf(Record item) {
-            if (item == null || !this.Contains(item))
+            if (item.Index >= this.count)
                 return -1;
 
             return item.Index;
@@ -206,23 +202,28 @@ namespace LogWatch.Features.Records {
                 if (index >= this.count)
                     return null;
 
-                var isNew = false;
+                Record record;
 
-                lock (this.cacheSlots) {
-                    var record = this.cache.GetOrAdd(index, key => {
-                        isNew = true;
-                        return new Record {Index = key};
-                    });
-
-                    if (isNew) {
-                        this.cacheSlots.Enqueue(index);
-                        this.RequestRecord(index);
-                    }
-
+                if (this.cache.TryGetValue(index, out record))
                     return record;
-                }
+
+                record = new Record {Index = index};
+
+                this.cache[index] = record;
+
+                this.ReleaseSlot();
+                this.cacheSlots.Enqueue(index);
+                this.loadingRecordCountSubject.OnNext(Interlocked.Increment(ref this.loadingRecordCount));
+                this.requestedResocords.OnNext(record);
+
+                return record;
             }
             set { throw new NotSupportedException(); }
+        }
+
+        private void ReleaseSlot() {
+            if (this.cacheSlots.Count > this.CacheSize)
+                this.cache.Remove(this.cacheSlots.Dequeue());
         }
 
         public event NotifyCollectionChangedEventHandler CollectionChanged;
@@ -272,41 +273,20 @@ namespace LogWatch.Features.Records {
             this.Set(propertyName, ref field, newValue);
         }
 
-        private async void LoadRecordsAsync(IList<int> batch) {
+        private async void LoadRecordsAsync(IList<Record> batch) {
             if (batch.Count > this.CacheSize)
                 for (var i = this.CacheSize; i < batch.Count; i++)
                     this.loadingRecordCountSubject.OnNext(Interlocked.Decrement(ref this.loadingRecordCount));
 
             batch = batch.Reverse().Take(this.CacheSize).Reverse().ToArray();
 
-            foreach (var index in batch) {
-                var loaded = await this.LoadRecordAsync(index);
+            foreach (var record in batch) {
+                var loaded = await this.LoadRecordAsync(record.Index);
 
-                loaded.IsLoaded = true;
-
-                var isUpdated = false;
-                
-                lock (this.cacheSlots) {
-                    var record = this.cache.AddOrUpdate(index, loaded, (key, existed) => {
-                        if (existed.IsLoaded)
-                            return existed;
-
-                        existed.IsLoaded = true;
-                        isUpdated = true;
-
-                        return existed;
-                    });
-
-                    if (isUpdated)
-                        this.UpdateRecord(record, loaded);
-                    else
-                        this.cacheSlots.Enqueue(index);
-                }
+                this.UpdateRecord(record, loaded);
 
                 this.loadingRecordCountSubject.OnNext(Interlocked.Decrement(ref this.loadingRecordCount));
             }
-
-            this.CleanCache();
         }
 
         private void UpdateRecord(Record existed, Record newRecord) {
@@ -318,6 +298,7 @@ namespace LogWatch.Features.Records {
                 existed.Timestamp = newRecord.Timestamp;
                 existed.Attributes = newRecord.Attributes;
                 existed.DisplayIndex = newRecord.DisplayIndex;
+                existed.IsLoaded = true;
             }, this.CancellationToken,
                 TaskCreationOptions.None,
                 this.uiScheduler);
@@ -332,11 +313,6 @@ namespace LogWatch.Features.Records {
             return record;
         }
 
-        private void RequestRecord(int index) {
-            this.loadingRecordCountSubject.OnNext(Interlocked.Increment(ref this.loadingRecordCount));
-            this.requestedResocords.OnNext(index);
-        }
-
         public Task<Record> GetRecordAsync(int index, CancellationToken cancellationToken) {
             if (index >= this.count)
                 return Task.FromResult<Record>(null);
@@ -348,10 +324,10 @@ namespace LogWatch.Features.Records {
             PropertyChangedEventHandler handler = null;
 
             handler = (sender, args) => {
-                record.PropertyChanged -= handler;
-
-                if (args.PropertyName == "IsLoaded" && record.IsLoaded)
+                if (args.PropertyName == "IsLoaded" && record.IsLoaded) {
+                    record.PropertyChanged -= handler;
                     tcs.TrySetResult(record);
+                }
             };
 
             record.PropertyChanged += handler;
@@ -360,18 +336,6 @@ namespace LogWatch.Features.Records {
                 tcs.TrySetResult(record);
 
             return tcs.Task;
-        }
-
-        private void CleanCache() {
-            int index;
-
-            lock (this.cacheSlots)
-                while (this.cache.Count > this.CacheSize)
-                    if (this.cacheSlots.TryDequeue(out index)) {
-                        Record _;
-                        this.cache.TryRemove(index, out _);
-                    } else if (this.cacheSlots.Count == 0 && this.cache.Count > 0)
-                        Debugger.Break();
         }
 
         ~RecordCollection() {

@@ -1,4 +1,5 @@
-﻿using System.Windows.Controls;
+﻿using System.Collections;
+using System.Windows.Controls;
 using System.Windows.Interactivity;
 
 namespace LogWatch.Features.Records {
@@ -7,8 +8,11 @@ namespace LogWatch.Features.Records {
             var eventArgs = parameter as GoToIndexEventArgs;
 
             if (eventArgs != null) {
-                this.AssociatedObject.SelectedIndex = eventArgs.Index;
-                this.AssociatedObject.ScrollIntoView(this.AssociatedObject.SelectedItem);
+                var collection = (IList)this.AssociatedObject.ItemsSource;
+                var item = collection[eventArgs.Index];
+
+                this.AssociatedObject.SelectedItem = item;
+                this.AssociatedObject.ScrollIntoView(item);
             }
         }
     }

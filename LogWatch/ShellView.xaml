@@ -54,6 +54,28 @@
                 </Trigger>
             </Style.Triggers>
         </Style>
+
+        <Style
+            x:Key="RecordsProgressBar"
+            BasedOn="{StaticResource {x:Type ProgressBar}}"
+            TargetType="ProgressBar">
+            <Style.Triggers>
+                <Trigger Property="Value" Value="100">
+                    <Setter Property="Visibility" Value="Hidden" />
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style
+            x:Key="RecordsProgressText"
+            BasedOn="{StaticResource {x:Type TextBlock}}"
+            TargetType="TextBlock">
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding Progress}" Value="100">
+                    <Setter Property="Visibility" Value="Hidden" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
     </Window.Resources>
 
     <Grid>
@@ -78,15 +100,17 @@
         <Grid Grid.Row="2" Focusable="False">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
 
             <ProgressBar
-                Grid.ColumnSpan="3"
-                VerticalAlignment="Stretch"
+                Grid.ColumnSpan="4"
                 Background="Transparent"
                 Foreground="{DynamicResource InputBackground}"
+                Style="{StaticResource RecordsProgressBar}"
                 Value="{Binding ViewModel.Records.Progress, ElementName=Records}" />
 
             <ToggleButton
@@ -103,10 +127,20 @@
 
             <TextBlock
                 Grid.Column="3"
+                Margin="0,0,15,0"
+                HorizontalAlignment="Right"
+                VerticalAlignment="Center"
+                DataContext="{Binding ViewModel.Records, ElementName=Records}"
+                Style="{StaticResource RecordsProgressText}"
+                Text="{Binding Progress, StringFormat='{}{0:0.}%'}" />
+
+            <TextBlock
+                Grid.Column="4"
                 Margin="0,0,5,0"
                 HorizontalAlignment="Right"
                 VerticalAlignment="Center"
-                Text="{Binding ViewModel.Records.Count, ElementName=Records, StringFormat='{}{0:#,0} records'}" />
+                DataContext="{Binding ViewModel.Records, ElementName=Records}"
+                Text="{Binding Count, StringFormat='{}{0:#,0} records'}" />
         </Grid>
 
         <GridSplitter
