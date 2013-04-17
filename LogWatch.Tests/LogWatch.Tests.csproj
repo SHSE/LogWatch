@@ -88,6 +88,7 @@
   <ItemGroup>
     <Compile Include="FilteredRecordCollectionTests.cs" />
     <Compile Include="Formats\CsvFormatTests.cs" />
+    <Compile Include="Formats\LexFormatTests.cs" />
     <Compile Include="Formats\Log4JXmlFormatTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RecordCollectionTests.cs" />
