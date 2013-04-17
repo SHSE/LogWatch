@@ -16,7 +16,7 @@ if ($LASTEXITCODE -ne 0) {
     throw "Failed to build tests project"
 }
 
-.\Tools\xunit\xunit.console.clr4.x86.exe .\LogWatch.Tests\bin\Debug\LogWatch.Tests.dll
+.\Tools\xunit\xunit.console.clr4.x86.exe .\LogWatch.Tests\bin\Debug\LogWatch.Tests.dll /teamcity
 
 if ($LASTEXITCODE -ne 0) {
     throw "Huston, we have a problem!"
