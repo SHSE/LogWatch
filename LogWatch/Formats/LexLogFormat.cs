@@ -5,6 +5,7 @@ using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Roslyn.Compilers;
@@ -184,7 +185,7 @@ namespace LogWatch.Formats {
         }
 
         public bool TryCompileSegmentsScanner() {
-            if (!this.SegmentsExpression.Contains("{record}")) {
+            if (Regex.IsMatch(this.SegmentsExpression,@"^record\s+\S+")) {
                 this.Diagnostics.WriteLine("Expected 'record' token definition");
                 return false;
             }

@@ -26,7 +26,7 @@ record      {timestamp}[ ]{level}[ ]{message}\r\n
                 SegmentsExpression = lex
             };
 
-            format.TryCompileSegmentsScanner();
+            Assert.True(format.TryCompileSegmentsScanner());
 
             var subject = new ReplaySubject<RecordSegment>();
 
