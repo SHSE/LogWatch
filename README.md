@@ -1,11 +1,11 @@
-LogWatch
+LogWatch [<img src="http://teamcity.codebetter.com/app/rest/builds/buildType:(id:bt983)/statusIcon" />](http://teamcity.codebetter.com/viewType.html?buildTypeId=bt983)
 ========
 
 Minimalistic viewer for NLog, Log4Net and others.
 
 [
 <img src="http://dabuttonfactory.com/b.png?t=Install%20via%20ClickOnce&f=Calibri&ts=24&tc=ffffff&tshs=1&tshc=222222&it=png&c=5&bgt=gradient&bgc=707070&ebgc=5c5c5c&hp=20&vp=11" />
-](http://master.dl.sourceforge.net/project/logwatch-dotnet/LogWatch.application)
+](http://master.dl.sourceforge.net/project/logwatch-dotnet/LogWatch.application) or  [download binaries](http://teamcity.codebetter.com/repository/downloadAll/bt983/.lastSuccessful/artifacts.zip)
 
 <img src="http://i.imgur.com/JMouXWK.png" width="600px" />
 
