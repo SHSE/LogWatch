@@ -29,6 +29,8 @@ namespace LogWatch.Tests.Formats {
                        .Select(line => line.Trim()))
             };
 
+            Console.WriteLine(format.SegmentsExpression);
+
             Assert.True(format.TryCompileSegmentsScanner());
 
             var subject = new ReplaySubject<RecordSegment>();
@@ -72,6 +74,8 @@ namespace LogWatch.Tests.Formats {
                         lex.Split(new[] {Environment.NewLine}, StringSplitOptions.None)
                            .Select(line => line.Trim()))
             };
+
+            Console.WriteLine(format.RecordsExpression);
 
             Assert.True(format.TryCompileRecordsScanner());
 
