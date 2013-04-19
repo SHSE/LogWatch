@@ -7,6 +7,7 @@ using LogWatch.Formats;
 using Xunit;
 using System.Reactive.Linq;
 using System.Reactive.Threading.Tasks;
+using System.Linq;
 
 namespace LogWatch.Tests.Formats {
     public class LexFormatTests {
@@ -14,16 +15,18 @@ namespace LogWatch.Tests.Formats {
         public void ReadsSegments() {
             var stream = CreateStream("01.01.2012T15:41:23 DEBUG Hello world!\r\n02.01.2012T10:23:03 WARN Bye bye!");
             const string lex = @"
-timestamp   [0-9]{2}[.][0-9]{2}[.][0-9]{4}[T][0-9]{2}[:][0-9]{2}[:][0-9]{2}
-level       TRACE|DEBUG|INFO|WARN|ERROR|FATAL
-message     [^\r\n]+
+                timestamp   [0-9]{2}[.][0-9]{2}[.][0-9]{4}[T][0-9]{2}[:][0-9]{2}[:][0-9]{2}
+                level       TRACE|DEBUG|INFO|WARN|ERROR|FATAL
+                message     [^\r\n]+
 
-record      {timestamp}[ ]{level}[ ]{message}\r\n
-";
+                record      {timestamp}[ ]{level}[ ]{message}\r\n
+                ";
 
             var format = new LexLogFormat {
-                Diagnostics = Console.Out, 
-                SegmentsExpression = lex
+                Diagnostics = Console.Out,
+                SegmentsExpression = string.Join(Environment.NewLine,
+                    lex.Split(new[] {Environment.NewLine}, StringSplitOptions.None)
+                       .Select(line => line.Trim()))
             };
 
             Assert.True(format.TryCompileSegmentsScanner());
@@ -48,23 +51,26 @@ record      {timestamp}[ ]{level}[ ]{message}\r\n
         [Fact]
         public void DeserializesRecord() {
             const string lex = @"
-timestamp   [0-9]{2}[.][0-9]{2}[.][0-9]{4}[T][0-9]{2}[:][0-9]{2}[:][0-9]{2}
-level       TRACE|DEBUG|INFO|WARN|ERROR|FATAL
-message     [^\r\n]+
+                timestamp   [0-9]{2}[.][0-9]{2}[.][0-9]{4}[T][0-9]{2}[:][0-9]{2}[:][0-9]{2}
+                level       TRACE|DEBUG|INFO|WARN|ERROR|FATAL
+                message     [^\r\n]+
 
-%x matched_level
-%%
+                %x matched_level
+                %%
 
-<INITIAL,matched_level> {
-    {timestamp} { this.Timestamp = yytext; BEGIN(INITIAL); }
-    {level} { this.Level = yytext; BEGIN(matched_level); }
-}
-<matched_level>{message} { this.Message = yytext; BEGIN(INITIAL); }
-";
+                <INITIAL,matched_level> {
+                    {timestamp} { this.Timestamp = yytext; BEGIN(INITIAL); }
+                    {level} { this.Level = yytext; BEGIN(matched_level); }
+                }
+                <matched_level>{message} { this.Message = yytext; BEGIN(INITIAL); }
+                ";
 
             var format = new LexLogFormat {
                 Diagnostics = Console.Out,
-                RecordsExpression = lex
+                RecordsExpression =
+                    string.Join(Environment.NewLine,
+                        lex.Split(new[] {Environment.NewLine}, StringSplitOptions.None)
+                           .Select(line => line.Trim()))
             };
 
             Assert.True(format.TryCompileRecordsScanner());
