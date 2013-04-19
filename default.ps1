@@ -3,6 +3,7 @@ Framework('4.0x86')
 properties {
     $version = '1.0.0.0'
     $sfpassword = $null
+    $updateurl = $null
 }
 
 task default -depends Build
@@ -39,7 +40,8 @@ task Publish -depends Clean, Test {
         /t:publish `
         /p:Configuration=Release `
         /p:DownloadNuGetExe=True `
-        /p:ApplicationVersion=$version }
+        /p:ApplicationVersion=$version `
+        /p:UpdateUrl=$updateurl }
 
     Copy-Item .\LogWatch\bin\Release\app.publish\* .\Build -Recurse -Force
 }
