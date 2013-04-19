@@ -1,4 +1,4 @@
-﻿using LogWatch.Annotations;
+﻿using System.Windows;
 
 namespace LogWatch.Features.Search {
     public partial class SearchView {
@@ -6,10 +6,9 @@ namespace LogWatch.Features.Search {
             this.InitializeComponent();
         }
 
-        [UsedImplicitly]
-        public void OnFind() {
-            this.Query.Focus();
-            this.Query.SelectAll();
+        private void TextBox_OnIsVisibleChanged(object sender, DependencyPropertyChangedEventArgs e) {
+            if (this.IsVisible)
+                this.Query.Focus();
         }
     }
 }

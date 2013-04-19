@@ -22,8 +22,6 @@
                 PropertyName="IsActive"
                 TargetObject="{Binding}"
                 Value="True" />
-
-            <ei:CallMethodAction MethodName="OnFind" />
         </util:CommandBindingTrigger>
 
         <util:CommandBindingTrigger Command="Close">
@@ -179,6 +177,7 @@
         <TextBox
             x:Name="Query"
             Margin="5,0,0,0"
+            IsVisibleChanged="TextBox_OnIsVisibleChanged"
             Text="{Binding Query, UpdateSourceTrigger=PropertyChanged}">
             <TextBox.InputBindings>
                 <KeyBinding Key="Escape" Command="Close" />
