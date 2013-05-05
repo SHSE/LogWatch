@@ -7,9 +7,8 @@ using System.Runtime.ExceptionServices;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Threading;
-using LogWatch.Features.SelectSource;
-using LogWatch.Formats;
-using LogWatch.Sources;
+using LogWatch.Features.Formats;
+using LogWatch.Features.Sources;
 
 namespace LogWatch {
     public sealed partial class App {
@@ -24,59 +23,40 @@ namespace LogWatch {
                     Current.Dispatcher.Invoke(() => HandleException(exception));
             };
 
-        private static readonly Func<string, bool> CollectStatsOnDemand =
-            filePath => new FileInfo(filePath).Length >= 10*1024*1024;
-
         private static CompositionContainer container;
 
-        public static readonly Func<Stream, ILogFormat> SelectFormat = stream => {
-            var formatSelector = new AutoLogFormatSelector();
+        public static readonly Func<Stream, ILogFormat> SelectFormat =
+            stream => {
+                if (!Current.CheckAccess())
+                    return Current.Dispatcher.InvokeAsync(() => SelectFormat(stream)).Result;
 
-            container.SatisfyImportsOnce(formatSelector);
+                var formatSelector = new AutoLogFormatSelector();
 
-            var logFormats = formatSelector.SelectFormat(stream).ToArray();
+                container.SatisfyImportsOnce(formatSelector);
 
-            if (logFormats.Length == 0)
-                return new PlainTextLogFormat();
+                var logFormats = formatSelector.SelectFormat(stream).ToArray();
 
-            if (logFormats.Length == 1)
-                return logFormats[0].Value;
+                if (logFormats.Length == 0)
+                    return new PlainTextLogFormat();
 
-            var view = new SelectFormatView();
-            var viewModel = view.ViewModel;
+                if (logFormats.Length == 1)
+                    return logFormats[0].Value.Create();
 
-            foreach (var format in logFormats)
-                viewModel.Formats.Add(format);
+                var view = new SelectFormatView();
+                var viewModel = view.ViewModel;
 
-            viewModel.Formats.Add(
-                new Lazy<ILogFormat, ILogFormatMetadata>(
-                    () => new PlainTextLogFormat(),
-                    new LogFormatAttribute("Plain text")));
+                foreach (var format in logFormats)
+                    viewModel.Formats.Add(format);
 
-            return view.ShowDialog() != true ? null : viewModel.Format;
-        };
+                viewModel.Formats.Add(
+                    new Lazy<ILogFormatFactory, ILogFormatMetadata>(
+                        () => new SimpleLogFormatFactory<PlainTextLogFormat>(),
+                        new LogFormatFactoryAttribute("Plain text")));
 
-        public static readonly Func<string, LogSourceInfo> CreateFileLogSource = filePath => {
-            ILogFormat format;
-
-            using (var stream = File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
-                format = SelectFormat(stream);
-
-            if (format == null)
-                return null;
-
-            return new LogSourceInfo(
-                new FileLogSource(filePath, format),
-                filePath,
-                false,
-                CollectStatsOnDemand(filePath));
-        };
+                return view.ShowDialog() != true ? null : viewModel.Format;
+            };
 
         public static LogSourceInfo SourceInfo { get; set; }
-
-        public static ILogSource Source {
-            get { return SourceInfo == null ? null : SourceInfo.Source; }
-        }
 
         protected override void OnStartup(StartupEventArgs e) {
             base.OnStartup(e);
@@ -97,10 +77,14 @@ namespace LogWatch {
             if (string.IsNullOrEmpty(filePath)) {
                 var view = new SelectSourceView();
 
+                container.SatisfyImportsOnce(view.ViewModel);
+
                 if (view.ShowDialog() == true)
                     SourceInfo = view.ViewModel.Source;
-            } else
-                SourceInfo = CreateFileLogSource(filePath);
+            } else {
+                var factory = new FileLogSourceFactory();
+                SourceInfo = factory.Create(SelectFormat);
+            }
 
             if (SourceInfo == null) {
                 this.Shutdown();

@@ -6,8 +6,8 @@ using System.Threading;
 using GalaSoft.MvvmLight;
 using GalaSoft.MvvmLight.Command;
 using LogWatch.Annotations;
+using LogWatch.Features.Sources;
 using LogWatch.Messages;
-using LogWatch.Sources;
 
 namespace LogWatch.Features.Records {
     public sealed class RecordsViewModel : ViewModelBase {

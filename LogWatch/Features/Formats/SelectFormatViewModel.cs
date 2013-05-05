@@ -4,22 +4,22 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using GalaSoft.MvvmLight;
 using GalaSoft.MvvmLight.Command;
-using LogWatch.Formats;
 
-namespace LogWatch.Features.SelectSource {
+namespace LogWatch.Features.Formats {
     public class SelectFormatViewModel : ViewModelBase {
         private ILogFormat format;
         private bool? isFormatSelected;
 
         public SelectFormatViewModel() {
-            this.Formats = new ObservableCollection<Lazy<ILogFormat, ILogFormatMetadata>>();
+            this.Formats = new ObservableCollection<Lazy<ILogFormatFactory, ILogFormatMetadata>>();
 
             this.SelectFormatCommand = new RelayCommand<string>(name => {
-                this.Format =
-                    this.Formats
-                        .Where(x => x.Metadata.Name == name)
-                        .Select(x => x.Value)
-                        .FirstOrDefault();
+                var factory = this.Formats
+                                  .Where(x => x.Metadata.Name == name)
+                                  .Select(x => x.Value)
+                                  .First();
+
+                this.Format = factory.Create();
 
                 this.IsFormatSelected = true;
             });
@@ -32,7 +32,7 @@ namespace LogWatch.Features.SelectSource {
             set { this.Set(ref this.format, value); }
         }
 
-        public ObservableCollection<Lazy<ILogFormat, ILogFormatMetadata>> Formats { get; private set; }
+        public ObservableCollection<Lazy<ILogFormatFactory, ILogFormatMetadata>> Formats { get; private set; }
 
         public bool? IsFormatSelected {
             get { return this.isFormatSelected; }

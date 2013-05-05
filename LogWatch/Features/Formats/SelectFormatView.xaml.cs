@@ -1,4 +1,4 @@
-﻿namespace LogWatch.Features.SelectSource {
+﻿namespace LogWatch.Features.Formats {
     public partial class SelectFormatView {
         public SelectFormatView() {
             this.InitializeComponent();

@@ -1,6 +1,6 @@
 ﻿using GalaSoft.MvvmLight.Messaging;
 using LogWatch.Features.RecordDetails;
-using LogWatch.Features.SelectSource;
+using LogWatch.Features.Sources;
 using LogWatch.Messages;
 using Xunit;
 

@@ -3,12 +3,12 @@ using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.IO;
 
-namespace LogWatch.Formats {
+namespace LogWatch.Features.Formats {
     public class AutoLogFormatSelector {
-        [ImportMany(typeof (ILogFormat))]
-        public IEnumerable<Lazy<ILogFormat, ILogFormatMetadata>> Formats { get; set; }
+        [ImportMany(typeof (ILogFormatFactory))]
+        public IEnumerable<Lazy<ILogFormatFactory, ILogFormatMetadata>> Formats { get; set; }
 
-        public IEnumerable<Lazy<ILogFormat, ILogFormatMetadata>> SelectFormat(Stream stream) {
+        public IEnumerable<Lazy<ILogFormatFactory, ILogFormatMetadata>> SelectFormat(Stream stream) {
             foreach (var format in this.Formats) {
                 stream.Position = 0;
 

@@ -6,10 +6,10 @@ using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Threading;
 using System.Threading.Tasks;
-using LogWatch.Formats;
+using LogWatch.Features.Formats;
 using LogWatch.Util;
 
-namespace LogWatch.Sources {
+namespace LogWatch.Features.Sources {
     public class FileLogSource : ILogSource {
         private readonly AutoResetEventAsync fileChanged = new AutoResetEventAsync(false);
         private readonly string filePath;

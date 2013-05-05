@@ -3,7 +3,7 @@ using System.IO;
 using System.Reactive.Subjects;
 using System.Text;
 using System.Threading;
-using LogWatch.Formats;
+using LogWatch.Features.Formats;
 using Xunit;
 using System.Reactive.Linq;
 using System.Reactive.Threading.Tasks;

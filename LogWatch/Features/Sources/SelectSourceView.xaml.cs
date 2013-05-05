@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Net;
 
-namespace LogWatch.Features.SelectSource {
+namespace LogWatch.Features.Sources {
     public partial class SelectSourceView {
         public static readonly Func<IPEndPoint> SelectEndPoint = () => {
             var view = new SelectPortView();

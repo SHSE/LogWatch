@@ -6,8 +6,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace LogWatch.Formats {
-    [LogFormat("CSV")]
+namespace LogWatch.Features.Formats {
     public class CsvLogFormat : ILogFormat {
         private bool isHeader = true;
 
@@ -16,6 +15,11 @@ namespace LogWatch.Formats {
             this.Delimeter = ';';
             this.Quote = '"';
             this.ReadHeader = true;
+        }
+
+        [LogFormatFactory("CSV")]
+        public static ILogFormatFactory Factory {
+            get { return new SimpleLogFormatFactory<CsvLogFormat>(CanRead); }
         }
 
         public Tuple<int, string>[] AttributeMappings { get; set; }
@@ -28,6 +32,7 @@ namespace LogWatch.Formats {
         public int? MessageFieldIndex { get; set; }
         public int? ExceptionFieldIndex { get; set; }
         public int? FieldCount { get; set; }
+        public bool ReadHeader { get; set; }
 
         public Record DeserializeRecord(ArraySegment<byte> segment) {
             var text = Encoding.UTF8.GetString(segment.Array, segment.Offset, segment.Count);
@@ -62,7 +67,7 @@ namespace LogWatch.Formats {
             using (var reader = new StreamReader(stream, this.Encoding, false, 4096, true)) {
                 var offset = stream.Position;
 
-                if (this.isHeader && ReadHeader) {
+                if (this.isHeader && this.ReadHeader) {
                     var header = await reader.ReadLineAsync();
 
                     if (header == null)
@@ -95,7 +100,7 @@ namespace LogWatch.Formats {
             }
         }
 
-        public bool CanRead(Stream stream) {
+        private static bool CanRead(Stream stream) {
             using (var reader = new StreamReader(stream, Encoding.UTF8, true, 4096, true)) {
                 var buffer = new char[4*1024];
                 var count = reader.Read(buffer, 0, buffer.Length);
@@ -287,7 +292,5 @@ namespace LogWatch.Formats {
 
             return -1;
         }
-
-        public bool ReadHeader { get; set; }
     }
 }

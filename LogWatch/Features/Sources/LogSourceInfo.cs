@@ -1,4 +1,4 @@
-﻿namespace LogWatch.Sources {
+﻿namespace LogWatch.Features.Sources {
     public sealed class LogSourceInfo {
         public LogSourceInfo(ILogSource source, string name, bool autoScroll, bool collectStatsOnDemand) {
             this.CollectStatsOnDemand = collectStatsOnDemand;

@@ -1,7 +1,7 @@
 ﻿using System.Windows.Controls.Primitives;
 using System.Windows.Data;
 
-namespace LogWatch.Features.SelectSource {
+namespace LogWatch.Features.Sources {
     public partial class SelectPortView {
         public SelectPortView() {
             this.InitializeComponent();

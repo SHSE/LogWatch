@@ -4,7 +4,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace LogWatch.Formats {
+namespace LogWatch.Features.Formats {
     public class PlainTextLogFormat : ILogFormat {
         public PlainTextLogFormat() {
             this.Encoding = Encoding.UTF8;

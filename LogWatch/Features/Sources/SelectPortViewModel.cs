@@ -2,7 +2,7 @@
 using GalaSoft.MvvmLight;
 using GalaSoft.MvvmLight.Command;
 
-namespace LogWatch.Features.SelectSource {
+namespace LogWatch.Features.Sources {
     public class SelectPortViewModel : ViewModelBase {
         private bool? isPortSet;
         private int? port;

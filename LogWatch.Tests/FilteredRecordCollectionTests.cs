@@ -5,7 +5,7 @@ using System.Reactive.Threading.Tasks;
 using System.Threading;
 using System.Threading.Tasks;
 using LogWatch.Features.Records;
-using LogWatch.Sources;
+using LogWatch.Features.Sources;
 using Microsoft.Reactive.Testing;
 using Moq;
 using Xunit;

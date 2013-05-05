@@ -157,6 +157,8 @@
     </ApplicationDefinition>
     <Compile Include="Controls\IconToggleButton.cs" />
     <Compile Include="DialogService.cs" />
+    <Compile Include="Features\Formats\ILogFormatFactory.cs" />
+    <Compile Include="Features\Formats\SimpleLogFormatFactory.cs" />
     <Compile Include="Features\Records\AutoSizeColumnBehaviour.cs" />
     <Compile Include="Features\Records\FilteredRecordCollection.cs" />
     <Compile Include="Features\Records\GoToIndexEventArgs.cs" />
@@ -168,20 +170,25 @@
       <DependentUpon>SearchView.xaml</DependentUpon>
     </Compile>
     <Compile Include="Features\Search\SearchViewModel.cs" />
-    <Compile Include="Features\SelectSource\SelectFormatView.xaml.cs">
+    <Compile Include="Features\Formats\SelectFormatView.xaml.cs">
       <DependentUpon>SelectFormatView.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Features\SelectSource\SelectFormatViewModel.cs" />
-    <Compile Include="Features\SelectSource\SelectPortView.xaml.cs">
+    <Compile Include="Features\Formats\SelectFormatViewModel.cs" />
+    <Compile Include="Features\Sources\SelectPortView.xaml.cs">
       <DependentUpon>SelectPortView.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Features\SelectSource\SelectPortViewModel.cs" />
-    <Compile Include="Formats\ILogFormatMetadata.cs" />
-    <Compile Include="Formats\LexLogFormat.cs" />
-    <Compile Include="Formats\LogFormatAttribute.cs" />
-    <Compile Include="Formats\PlainTextLogFormat.cs" />
+    <Compile Include="Features\Sources\SelectPortViewModel.cs" />
+    <Compile Include="Features\Sources\FileLogSourceFactory.cs" />
+    <Compile Include="Features\Sources\ILogSourceFactory.cs" />
+    <Compile Include="Features\Sources\ILogSourceMetadata.cs" />
+    <Compile Include="Features\Sources\LogSourceFactoryAttribute.cs" />
+    <Compile Include="Features\Sources\UdpLogSourceFactory.cs" />
+    <Compile Include="Features\Formats\ILogFormatMetadata.cs" />
+    <Compile Include="Features\Formats\LexLogFormat.cs" />
+    <Compile Include="Features\Formats\LogFormatFactoryAttribute.cs" />
+    <Compile Include="Features\Formats\PlainTextLogFormat.cs" />
     <Compile Include="Messages\RecordFilterChangedMessage.cs" />
-    <Compile Include="Sources\LogSourceInfo.cs" />
+    <Compile Include="Features\Sources\LogSourceInfo.cs" />
     <Compile Include="Messages\NavigatedToRecordMessage.cs" />
     <Compile Include="Messages\RecordContextChangedMessage.cs" />
     <Compile Include="Messages\RecordSelectedMessage.cs" />
@@ -197,18 +204,18 @@
     <Compile Include="Features\Records\AutoScrollToEndBehaviour.cs" />
     <Compile Include="Features\Records\IgnoreLinebreaksConverter.cs" />
     <Compile Include="Features\Records\LoggerToShortStringConverter.cs" />
-    <Compile Include="Features\SelectSource\SelectSourceView.xaml.cs">
+    <Compile Include="Features\Sources\SelectSourceView.xaml.cs">
       <DependentUpon>SelectSourceView.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Features\SelectSource\SelectSourceViewModel.cs" />
-    <Compile Include="Formats\CsvLogFormat.cs" />
-    <Compile Include="Sources\ILogSource.cs" />
+    <Compile Include="Features\Sources\SelectSourceViewModel.cs" />
+    <Compile Include="Features\Formats\CsvLogFormat.cs" />
+    <Compile Include="Features\Sources\ILogSource.cs" />
     <Compile Include="Util\DialogResultBehaviour.cs" />
     <Compile Include="Util\KmpUtil.cs" />
     <Compile Include="LogLevel.cs" />
-    <Compile Include="Sources\FileLogSource.cs" />
-    <Compile Include="Formats\Log4JXmlLogFormat.cs" />
-    <Compile Include="Formats\AutoLogFormatSelector.cs" />
+    <Compile Include="Features\Sources\FileLogSource.cs" />
+    <Compile Include="Features\Formats\Log4JXmlLogFormat.cs" />
+    <Compile Include="Features\Formats\AutoLogFormatSelector.cs" />
     <Compile Include="Properties\Annotations.cs" />
     <Compile Include="Record.cs" />
     <Compile Include="Features\Records\RecordCollection.cs" />
@@ -220,11 +227,11 @@
       <DependentUpon>StatsView.xaml</DependentUpon>
     </Compile>
     <Compile Include="Features\Stats\StatsViewModel.cs" />
-    <Compile Include="Formats\ILogFormat.cs" />
+    <Compile Include="Features\Formats\ILogFormat.cs" />
     <Compile Include="Features\Records\RecordsViewModel.cs" />
     <Compile Include="ShellViewModel.cs" />
-    <Compile Include="Sources\LogSourceStatus.cs" />
-    <Compile Include="Sources\UdpLogSource.cs" />
+    <Compile Include="Features\Sources\LogSourceStatus.cs" />
+    <Compile Include="Features\Sources\UdpLogSource.cs" />
     <Compile Include="Util\TextGeometry.cs" />
     <Page Include="Features\RecordDetails\RecordDetailsView.xaml">
       <SubType>Designer</SubType>
@@ -238,15 +245,15 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Features\SelectSource\SelectFormatView.xaml">
+    <Page Include="Features\Formats\SelectFormatView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Features\SelectSource\SelectPortView.xaml">
+    <Page Include="Features\Sources\SelectPortView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Features\SelectSource\SelectSourceView.xaml">
+    <Page Include="Features\Sources\SelectSourceView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -398,6 +405,7 @@
       <FileType>Assembly</FileType>
     </PublishFile>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="$(SolutionDir)\.nuget\nuget.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

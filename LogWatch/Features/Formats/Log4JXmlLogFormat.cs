@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -9,14 +8,18 @@ using System.Xml;
 using System.Xml.Linq;
 using LogWatch.Util;
 
-namespace LogWatch.Formats {
-    [LogFormat("Log4J XML")]
+namespace LogWatch.Features.Formats {
     public class Log4JXmlLogFormat : ILogFormat {
         private static readonly byte[] EventStart = Encoding.UTF8.GetBytes("<log4j:event ");
         private static readonly byte[] EventEnd = Encoding.UTF8.GetBytes("</log4j:event>");
 
         public Log4JXmlLogFormat() {
             this.BufferSize = 16*1024;
+        }
+
+        [LogFormatFactory("Log4J XML")]
+        public static ILogFormatFactory Factory {
+            get { return new SimpleLogFormatFactory<Log4JXmlLogFormat>(CanRead); }
         }
 
         public int BufferSize { get; set; }
@@ -107,7 +110,7 @@ namespace LogWatch.Formats {
             }
         }
 
-        public bool CanRead(Stream stream) {
+        private static bool CanRead(Stream stream) {
             using (var reader = new StreamReader(stream, Encoding.UTF8, true, 4096, true)) {
                 var buffer = new char[4*1024];
                 var count = reader.Read(buffer, 0, buffer.Length);

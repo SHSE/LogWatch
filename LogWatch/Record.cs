@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using GalaSoft.MvvmLight;
 using LogWatch.Annotations;
-using LogWatch.Sources;
+using LogWatch.Features.Sources;
 
 namespace LogWatch {
     public sealed class Record : ObservableObject {

@@ -5,7 +5,7 @@ using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using LogWatch.Sources;
+using LogWatch.Features.Sources;
 
 namespace LogWatch.Features.Records {
     public class FilteredRecordCollection : RecordCollection {

@@ -7,8 +7,8 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using GalaSoft.MvvmLight;
 using GalaSoft.MvvmLight.Command;
+using LogWatch.Features.Sources;
 using LogWatch.Messages;
-using LogWatch.Sources;
 
 namespace LogWatch.Features.Stats {
     public class StatsViewModel : ViewModelBase {

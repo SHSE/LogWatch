@@ -5,7 +5,7 @@ using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Text;
 using System.Threading;
-using LogWatch.Formats;
+using LogWatch.Features.Formats;
 using Xunit;
 
 namespace LogWatch.Tests.Formats {

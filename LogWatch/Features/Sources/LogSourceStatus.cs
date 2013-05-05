@@ -1,4 +1,4 @@
-﻿namespace LogWatch.Sources {
+﻿namespace LogWatch.Features.Sources {
     public struct LogSourceStatus {
         public readonly int Count;
         public readonly bool IsProcessingSavedData;

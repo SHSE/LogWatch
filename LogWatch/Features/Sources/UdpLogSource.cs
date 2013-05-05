@@ -7,9 +7,9 @@ using System.Reactive.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using LogWatch.Formats;
+using LogWatch.Features.Formats;
 
-namespace LogWatch.Sources {
+namespace LogWatch.Features.Sources {
     public class UdpLogSource : ILogSource {
         private readonly string dumpFilePath;
         private readonly FileStream dumpStream;
@@ -34,7 +34,7 @@ namespace LogWatch.Sources {
                 TaskScheduler.Default);
         }
 
-        public Func<Stream, Task<ILogFormat>> SelectLogFormat { get; set; }
+        public Func<Stream, ILogFormat> SelectLogFormat { get; set; }
 
         public byte[] RecordsSeparator { get; set; }
 
@@ -132,11 +132,11 @@ namespace LogWatch.Sources {
             this.Dispose();
         }
 
-        private async void InitializeLogSource() {
+        private void InitializeLogSource() {
             ILogFormat logFormat;
 
             using (var fileStream = File.Open(this.dumpFilePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
-                logFormat = await this.SelectLogFormat(fileStream);
+                logFormat = this.SelectLogFormat(fileStream);
 
             this.fileSource = new FileLogSource(this.dumpFilePath, logFormat);
             this.fileSourceCreated.Set();

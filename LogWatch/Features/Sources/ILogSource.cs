@@ -2,7 +2,7 @@
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace LogWatch.Sources {
+namespace LogWatch.Features.Sources {
     public interface ILogSource : IDisposable {
         IObservable<Record> Records { get; }
         IObservable<LogSourceStatus> Status { get; }

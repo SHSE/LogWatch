@@ -11,7 +11,7 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using GalaSoft.MvvmLight;
-using LogWatch.Sources;
+using LogWatch.Features.Sources;
 
 namespace LogWatch.Features.Records {
     public class RecordCollection :

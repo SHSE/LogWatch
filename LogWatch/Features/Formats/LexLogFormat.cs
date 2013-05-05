@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 using Roslyn.Compilers;
 using Roslyn.Compilers.CSharp;
 
-namespace LogWatch.Formats {
+namespace LogWatch.Features.Formats {
     public class LexLogFormat : ILogFormat {
         private const string ScannerBase = @"
             using System;
