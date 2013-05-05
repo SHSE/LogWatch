@@ -83,7 +83,7 @@ namespace LogWatch {
                     SourceInfo = view.ViewModel.Source;
             } else {
                 var factory = new FileLogSourceFactory();
-                SourceInfo = factory.Create(SelectFormat);
+                SourceInfo = factory.Create(SelectFormat, filePath);
             }
 
             if (SourceInfo == null) {

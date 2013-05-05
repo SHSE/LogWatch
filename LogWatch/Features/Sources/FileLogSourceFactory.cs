@@ -14,6 +14,10 @@ namespace LogWatch.Features.Sources {
 
             var filePath = dialog.FileName;
 
+            return Create(formatResolver, filePath);
+        }
+
+        public LogSourceInfo Create(Func<Stream, ILogFormat> formatResolver, string filePath) {
             ILogFormat format;
 
             using (var stream = File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
