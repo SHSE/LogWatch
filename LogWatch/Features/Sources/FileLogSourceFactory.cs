@@ -23,6 +23,9 @@ namespace LogWatch.Features.Sources {
             using (var stream = File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
                 format = formatResolver(stream);
 
+            if (format == null)
+                return null;
+
             return new LogSourceInfo(
                 new FileLogSource(filePath, format),
                 filePath,

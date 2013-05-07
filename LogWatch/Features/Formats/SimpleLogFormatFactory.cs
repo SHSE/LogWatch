@@ -9,7 +9,7 @@ namespace LogWatch.Features.Formats {
             this.canRead = canRead;
         }
 
-        public ILogFormat Create() {
+        public ILogFormat Create(Stream stream) {
             return new T();
         }
 

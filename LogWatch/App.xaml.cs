@@ -1,6 +1,7 @@
 ﻿using System;
 using System.ComponentModel.Composition;
 using System.ComponentModel.Composition.Hosting;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.ExceptionServices;
@@ -12,16 +13,7 @@ using LogWatch.Features.Sources;
 
 namespace LogWatch {
     public sealed partial class App {
-        public static readonly Action<Exception> HandleException =
-            exception => {
-                if (Current.Dispatcher.CheckAccess())
-                    if (exception is AggregateException)
-                        ExceptionDispatchInfo.Capture(exception.InnerException).Throw();
-                    else
-                        ExceptionDispatchInfo.Capture(exception).Throw();
-                else
-                    Current.Dispatcher.Invoke(() => HandleException(exception));
-            };
+        public static readonly Action<Exception> HandleException = OnException;
 
         private static CompositionContainer container;
 
@@ -34,16 +26,20 @@ namespace LogWatch {
 
                 container.SatisfyImportsOnce(formatSelector);
 
+                stream.Position = 0;
+
                 var logFormats = formatSelector.SelectFormat(stream).ToArray();
 
                 if (logFormats.Length == 0)
                     return new PlainTextLogFormat();
 
                 if (logFormats.Length == 1)
-                    return logFormats[0].Value.Create();
+                    return logFormats[0].Value.Create(stream);
 
                 var view = new SelectFormatView();
                 var viewModel = view.ViewModel;
+
+                viewModel.LogStream = stream;
 
                 foreach (var format in logFormats)
                     viewModel.Formats.Add(format);
@@ -57,6 +53,17 @@ namespace LogWatch {
             };
 
         public static LogSourceInfo SourceInfo { get; set; }
+
+        [DebuggerStepThrough]
+        private static void OnException(Exception exception) {
+            if (Current.Dispatcher.CheckAccess())
+                if (exception is AggregateException)
+                    ExceptionDispatchInfo.Capture(exception.InnerException).Throw();
+                else
+                    ExceptionDispatchInfo.Capture(exception).Throw();
+            else
+                Current.Dispatcher.Invoke(() => OnException(exception));
+        }
 
         protected override void OnStartup(StartupEventArgs e) {
             base.OnStartup(e);

@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
+using System.Security.Permissions;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -13,63 +14,28 @@ using Roslyn.Compilers.CSharp;
 
 namespace LogWatch.Features.Formats {
     public class LexLogFormat : ILogFormat {
-        private const string ScannerBase = @"
-            using System;
-            using System.Collections.Generic;
-            
-            namespace LogWatch.Formats.Lex {
-                public abstract class ScanBase {
-                    public Action<long, int> OffsetCallback;
-
-                    protected void NextOffset(long offset, int length) {
-                        OffsetCallback(offset, length);
-                    }
-
-                    public abstract int yylex();
-
-                    protected virtual bool yywrap() {
-                        return true;
-                    }
-
-                    public string Timestamp { get; set; }            
-                    public string Level { get; set; }
-                    public string Logger { get; set; }
-                    public string Message { get; set; }
-                    public string Exception { get; set; }
-                }
-
-                public enum Tokens {
-                    EOF = 0,
-                    maxParseToken = int.MaxValue
-                }
-            }
-        ";
-
-        private const string LexSegmentsFooter = @"
-            %namespace LogWatch.Formats.Lex
-
-            %%
-
-            {record} this.NextOffset((long) yypos, yyleng);";
-        private readonly ThreadLocal<dynamic> reocordsScanner;
+        private ThreadLocal<IScanner> reocordsScanner;
 
         private Type recordsScannerType;
         private Type segmentsScannerType;
 
         public LexLogFormat() {
-            this.reocordsScanner = new ThreadLocal<dynamic>(() => Activator.CreateInstance(this.recordsScannerType));
+            
+            this.Diagnostics = new StringWriter();
         }
 
-        public string SegmentsExpression { get; set; }
-        public string RecordsExpression { get; set; }
+        public string SegmentCode { get; set; }
+        public string RecordCode { get; set; }
 
         public TextWriter Diagnostics { get; set; }
 
         public Record DeserializeRecord(ArraySegment<byte> segment) {
             var scanner = this.reocordsScanner.Value;
 
-            scanner.SetSource((Stream) new MemoryStream(segment.Array, segment.Offset, segment.Count));
-            scanner.yylex();
+            scanner.Begin();
+            scanner.Reset();
+            scanner.Source = new MemoryStream(segment.Array, segment.Offset, segment.Count);
+            scanner.Parse();
 
             return new Record {
                 Level = GetLevel(scanner.Level),
@@ -84,20 +50,15 @@ namespace LogWatch.Features.Formats {
             Stream stream,
             CancellationToken cancellationToken) {
             return Task.Factory.StartNew(() => {
-                dynamic scanner = Activator.CreateInstance(this.segmentsScannerType);
+                var scanner = (IScanner) Activator.CreateInstance(this.segmentsScannerType);
 
-                scanner.OffsetCallback =
-                    new Action<long, int>((offset, length) => observer.OnNext(new RecordSegment(offset, length)));
+                scanner.OffsetCallback = (offset, length) => observer.OnNext(new RecordSegment(offset, length));
 
-                scanner.SetSource(stream);
-                scanner.yylex();
+                scanner.Source = stream;
+                scanner.Parse();
 
                 return -1L;
             });
-        }
-
-        public bool CanRead(Stream stream) {
-            return true;
         }
 
         private static LogLevel? GetLevel(string levelString) {
@@ -142,27 +103,30 @@ namespace LogWatch.Features.Formats {
             diagnostics.Write(process.StandardOutput.ReadToEnd());
             diagnostics.Write(process.StandardError.ReadToEnd());
 
+            if (!File.Exists(codeFile))
+                return null;
+
             var code = File.ReadAllText(codeFile, Encoding.UTF8);
 
             var codeTree = SyntaxTree.ParseText(code);
-            var scannerTree = SyntaxTree.ParseText(ScannerBase);
 
             foreach (var diagnostic in codeTree.GetDiagnostics())
                 diagnostics.WriteLine(diagnostic);
 
             var mscorlib = MetadataReference.CreateAssemblyReference("mscorlib");
+            var app = new MetadataFileReference(typeof (LexLogFormat).Assembly.Location);
 
             var name = string.Format("LexFileFormat-{0}", Guid.NewGuid().ToString("N"));
 
             var compilation = Compilation.Create(
                 outputName: name,
-                syntaxTrees: new[] {codeTree, scannerTree},
-                references: new[] {mscorlib},
+                syntaxTrees: new[] {codeTree},
+                references: new[] {mscorlib, app},
                 options: new CompilationOptions(OutputKind.DynamicallyLinkedLibrary, optimize: true));
 
             var assembly = AppDomain.CurrentDomain.DefineDynamicAssembly(
                 new AssemblyName(name), AssemblyBuilderAccess.RunAndCollect);
-
+            
             var module = assembly.DefineDynamicModule(name);
 
             var result = compilation.Emit(module);
@@ -174,32 +138,97 @@ namespace LogWatch.Features.Formats {
         }
 
         public bool TryCompileRecordsScanner() {
-            var lexCode = string.Join(
-                Environment.NewLine,
-                "%namespace LogWatch.Formats.Lex",
-                this.RecordsExpression);
+            var lexCode =
+                "%namespace LogWatch.Features.Formats.RecordsScanner\n" +
+                "%{\r\npublic override void Begin() { BEGIN(INITIAL); }\r\n%}\n" +
+                "%{\r\npublic override string Text { get { return this.yytext; } }\r\n%}\n" +
+                "%{\r\npublic override System.IO.Stream Source { set { this.SetSource(value); } }\r\n%}\n" +
+                this.Trim(this.RecordCode);
 
-            this.recordsScannerType = Compile(lexCode, this.Diagnostics, "LogWatch.Formats.Lex.Scanner");
+            this.recordsScannerType = Compile(lexCode, this.Diagnostics, "LogWatch.Features.Formats.RecordsScanner.Scanner");
+
+            this.reocordsScanner = new ThreadLocal<IScanner>(() => (IScanner) Activator.CreateInstance(this.recordsScannerType));
 
             return this.recordsScannerType != null;
         }
 
         public bool TryCompileSegmentsScanner() {
-            if (Regex.IsMatch(this.SegmentsExpression,@"^record\s+\S+")) {
+            if (Regex.IsMatch(this.SegmentCode, @"^record\s+\S+")) {
                 this.Diagnostics.WriteLine("Expected 'record' token definition");
                 return false;
             }
 
-            var lexCode = string.Join(
-                Environment.NewLine,
-                new[] {this.SegmentsExpression}
-                    .Concat(LexSegmentsFooter
-                        .Split(new[] {Environment.NewLine}, StringSplitOptions.None)
-                        .Select(x => x.Trim())));
+            var lexCode = "%namespace LogWatch.Features.Formats.SegmentsScanner\n" +
+                          "%{\r\npublic override void Begin() { BEGIN(INITIAL); }\r\n%}\n" +
+                          "%{\r\npublic override string Text { get { return this.yytext; } }\r\n%}\n" +
+                          "%{\r\npublic void Segment() { this.NextOffset((long) yypos, yyleng); }\r\n%}\n" +
+                          "%{\r\npublic override System.IO.Stream Source { set { this.SetSource(value); } }\r\n%}\n" +
+                          this.Trim(this.SegmentCode);
 
-            this.segmentsScannerType = Compile(lexCode, this.Diagnostics, "LogWatch.Formats.Lex.Scanner");
+            this.segmentsScannerType = Compile(lexCode, this.Diagnostics, "LogWatch.Features.Formats.SegmentsScanner.Scanner");
 
             return this.segmentsScannerType != null;
         }
+
+        private string Trim(string code) {
+            var lines = code.Split(new[] {Environment.NewLine}, StringSplitOptions.None).Select(x => x.Trim());
+            return string.Join(Environment.NewLine, lines);
+        }
+    }
+
+    public interface IScanner {
+        string Timestamp { get; }
+        string Level { get; }
+        string Logger { get; }
+        string Message { get; }
+        string Exception { get; }
+
+        Action<long, int> OffsetCallback { set; }
+        Stream Source { set; }
+
+        int Parse();
+        void Reset();
+        void Begin();
+    }
+
+    public abstract class ScanBase : IScanner {
+        public abstract string Text { get; }
+        public Action<long, int> OffsetCallback { get; set; }
+
+        public int Parse() {
+            return this.yylex();
+        }
+
+        public abstract void Begin();
+        public abstract Stream Source { set; }
+
+        public string Timestamp { get; set; }
+        public string Level { get; set; }
+        public string Logger { get; set; }
+        public string Message { get; set; }
+        public string Exception { get; set; }
+
+        public void Reset() {
+            this.Timestamp = null;
+            this.Level = null;
+            this.Logger = null;
+            this.Message = null;
+            this.Exception = null;
+        }
+
+        protected void NextOffset(long offset, int length) {
+            this.OffsetCallback(offset, length);
+        }
+
+        public abstract int yylex();
+
+        protected virtual bool yywrap() {
+            return true;
+        }
+    }
+
+    public enum Tokens {
+        EOF = 0,
+        maxParseToken = int.MaxValue
     }
 }

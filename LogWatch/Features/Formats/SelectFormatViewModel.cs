@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.ObjectModel;
+using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using GalaSoft.MvvmLight;
@@ -19,11 +20,14 @@ namespace LogWatch.Features.Formats {
                                   .Select(x => x.Value)
                                   .First();
 
-                this.Format = factory.Create();
+                this.Format = factory.Create(this.LogStream);
 
-                this.IsFormatSelected = true;
+                if (this.format != null)
+                    this.IsFormatSelected = true;
             });
         }
+
+        public Stream LogStream { get; set; }
 
         public RelayCommand<string> SelectFormatCommand { get; set; }
 

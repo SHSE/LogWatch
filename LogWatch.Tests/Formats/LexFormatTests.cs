@@ -24,12 +24,12 @@ namespace LogWatch.Tests.Formats {
 
             var format = new LexLogFormat {
                 Diagnostics = Console.Out,
-                SegmentsExpression = string.Join(Environment.NewLine,
+                SegmentCode = string.Join(Environment.NewLine,
                     lex.Split(new[] {Environment.NewLine}, StringSplitOptions.None)
                        .Select(line => line.Trim()))
             };
 
-            Console.WriteLine(format.SegmentsExpression);
+            Console.WriteLine(format.SegmentCode);
 
             Assert.True(format.TryCompileSegmentsScanner());
 
@@ -69,13 +69,13 @@ namespace LogWatch.Tests.Formats {
 
             var format = new LexLogFormat {
                 Diagnostics = Console.Out,
-                RecordsExpression =
+                RecordCode =
                     string.Join(Environment.NewLine,
                         lex.Split(new[] {Environment.NewLine}, StringSplitOptions.None)
                            .Select(line => line.Trim()))
             };
 
-            Console.WriteLine(format.RecordsExpression);
+            Console.WriteLine(format.RecordCode);
 
             Assert.True(format.TryCompileRecordsScanner());
 

@@ -134,6 +134,7 @@
       <HintPath>..\packages\Rx-Xaml.2.1.30214.0\lib\Net45\System.Reactive.Windows.Threading.dll</HintPath>
     </Reference>
     <Reference Include="System.Runtime.Caching" />
+    <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Windows.Interactivity, Version=4.5.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\MvvmLightLibs.4.1.27.0\lib\net45\System.Windows.Interactivity.dll</HintPath>
@@ -158,6 +159,11 @@
     <Compile Include="Controls\IconToggleButton.cs" />
     <Compile Include="DialogService.cs" />
     <Compile Include="Features\Formats\ILogFormatFactory.cs" />
+    <Compile Include="Features\Formats\LexLogFormatFactory.cs" />
+    <Compile Include="Features\Formats\LexView.xaml.cs">
+      <DependentUpon>LexView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Features\Formats\LexViewModel.cs" />
     <Compile Include="Features\Formats\SimpleLogFormatFactory.cs" />
     <Compile Include="Features\Records\AutoSizeColumnBehaviour.cs" />
     <Compile Include="Features\Records\FilteredRecordCollection.cs" />
@@ -233,6 +239,10 @@
     <Compile Include="Features\Sources\LogSourceStatus.cs" />
     <Compile Include="Features\Sources\UdpLogSource.cs" />
     <Compile Include="Util\TextGeometry.cs" />
+    <Page Include="Features\Formats\LexView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="Features\RecordDetails\RecordDetailsView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
