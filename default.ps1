@@ -16,7 +16,7 @@ task Download-XUnit {
     New-Item .\Tools\xunit -ItemType Directory -ErrorAction SilentlyContinue
     
     $wc = New-Object System.Net.WebClient
-    $wc.DownloadFile('http://download-codeplex.sec.s-msft.com/Download/Release?ProjectName=xunit&DownloadId=423827&FileTime=129859153262930000&Build=20425', '.\Tools\xunit\xunit.zip')
+    $wc.DownloadFile('http://download-codeplex.sec.s-msft.com/Download/Release?ProjectName=xunit&DownloadId=423827&FileTime=129859153262930000&Build=20474', '.\Tools\xunit\xunit.zip')
 
     $shell_app = new-object -com shell.application
     $zip_file = $shell_app.namespace((Resolve-Path .\Tools\xunit\xunit.zip).Path)
