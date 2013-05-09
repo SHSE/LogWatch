@@ -1,0 +1,61 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<SyntaxDefinition name="Lex" xmlns="http://icsharpcode.net/sharpdevelop/syntaxdefinition/2008">
+  <RuleSet>
+    <Span multiline="true">
+			<Begin foreground="LightPink">^%{</Begin>
+			<End foreground="LightPink">^%}</End>
+		</Span>
+    
+    <Span ruleSet="Rules" multiline="true">
+      <Begin foreground="LightPink">^%%</Begin>
+      <End foreground="LightPink">^%%</End>
+    </Span>
+    
+    <Span foreground="LightGray">
+			<Begin foreground="LightPink">^%x\s+</Begin>
+		</Span>
+    
+    <!--<Span foreground="LightPink">
+			<Begin>%</Begin>
+		</Span>-->
+    
+    <Span>
+      <Begin foreground="LightBlue">^\w+\s+</Begin>
+      <RuleSet>
+        <Rule foreground="LightGreen">
+          {\w+}
+        </Rule>
+      </RuleSet>
+    </Span>
+  </RuleSet>
+  
+  <RuleSet name="Rules">
+    <Keywords foreground="SkyBlue">
+      <Word>Timestamp</Word>
+      <Word>Level</Word>
+      <Word>Logger</Word>
+      <Word>Message</Word>
+      <Word>Exception</Word>
+    </Keywords>
+        
+    <Rule foreground="LightGray">
+      ^&lt;[a-zA-Z_]+&gt;
+    </Rule>
+    
+    <Rule foreground="LightGreen">
+      (^|(?&lt;=^&lt;[a-zA-Z_]+&gt;)){[a-zA-Z_]+}\s
+    </Rule>
+    
+    <Rule foreground="LightGray">
+      (?&lt;=BEGIN[(])[a-zA-Z_]+(?=[)])
+    </Rule>
+    
+    <Keywords foreground="LightCoral">
+      <Word>INITIAL</Word>
+      <Word>BEGIN</Word>
+      <Word>Segment</Word>
+      <Word>Text</Word>
+      <Word>yytext</Word>
+    </Keywords>
+  </RuleSet>
+</SyntaxDefinition>

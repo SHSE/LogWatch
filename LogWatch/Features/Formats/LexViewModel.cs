@@ -8,6 +8,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using GalaSoft.MvvmLight;
 using GalaSoft.MvvmLight.Command;
+using ICSharpCode.AvalonEdit.Document;
 using LogWatch.Annotations;
 
 namespace LogWatch.Features.Formats {
@@ -22,27 +23,29 @@ namespace LogWatch.Features.Formats {
 
         public LexViewModel() {
             this.PreviewCommand = new RelayCommand(this.Preview);
-            this.CommonCode = "timestamp [^;\\r\\n]+\n" +
-                              "level     [^;\\r\\n]+\n" +
-                              "logger    [^;\\r\\n]+\n" +
-                              "message   [^;\\r\\n]+\n" +
-                              "exception [^;\\r\\n]*\n";
+            this.CommonCode = new TextDocument(
+                "timestamp [^;\\r\\n]+\n" +
+                "level     [^;\\r\\n]+\n" +
+                "logger    [^;\\r\\n]+\n" +
+                "message   [^;\\r\\n]+\n" +
+                "exception [^;\\r\\n]*");
 
-            this.SegmentCode = "record {timestamp}[;]{message}[;]{logger}[;]{level}[;]{exception}\\r\\n\n" +
-                               "%%\n" +
-                               "{record} this.Segment();";
+            this.SegmentCode = new TextDocument(
+                "record {timestamp}[;]{message}[;]{logger}[;]{level}[;]{exception}\\r\\n\n" +
+                "%%\n" +
+                "{record} Segment();");
 
-            this.RecordCode = "%x MATCHED_TIMESTAMP\n" +
-                              "%x MATCHED_MESSAGE\n" +
-                              "%x MATCHED_LEVEL\n" +
-                              "%x MATCHED_LOGGER\n" +
-                              "%%\n" +
-                              "<INITIAL>{timestamp} { this.Timestamp = yytext; BEGIN(MATCHED_TIMESTAMP); }\n" +
-                              "<MATCHED_TIMESTAMP>{message} { this.Message = yytext; BEGIN(MATCHED_MESSAGE); }\n" +
-                              "<MATCHED_MESSAGE>{logger} { this.Logger = yytext; BEGIN(MATCHED_LOGGER); }\n" +
-                              "<MATCHED_LOGGER>{level} { this.Level = yytext; BEGIN(MATCHED_LEVEL); }\n" +
-                              "<MATCHED_LEVEL>{exception} { this.Exception = yytext; BEGIN(INITIAL); }\n" +
-                              "";
+            this.RecordCode = new TextDocument(
+                "%x MATCHED_TIMESTAMP\n" +
+                "%x MATCHED_MESSAGE\n" +
+                "%x MATCHED_LEVEL\n" +
+                "%x MATCHED_LOGGER\n" +
+                "%%\n" +
+                "<INITIAL>{timestamp} Timestamp = yytext; BEGIN(MATCHED_TIMESTAMP);\n" +
+                "<MATCHED_TIMESTAMP>{message} this.Message = yytext; BEGIN(MATCHED_MESSAGE);\n" +
+                "<MATCHED_MESSAGE>{logger} this.Logger = yytext; BEGIN(MATCHED_LOGGER);\n" +
+                "<MATCHED_LOGGER>{level} this.Level = yytext; BEGIN(MATCHED_LEVEL);\n" +
+                "<MATCHED_LEVEL>{exception} this.Exception = yytext; BEGIN(INITIAL);");
 
             if (this.IsInDesignMode)
                 return;
@@ -73,9 +76,9 @@ namespace LogWatch.Features.Formats {
             }
         }
 
-        public string CommonCode { get; set; }
-        public string SegmentCode { get; set; }
-        public string RecordCode { get; set; }
+        public TextDocument CommonCode { get; set; }
+        public TextDocument SegmentCode { get; set; }
+        public TextDocument RecordCode { get; set; }
 
         public string LogText {
             get { return this.logText; }
@@ -131,17 +134,17 @@ namespace LogWatch.Features.Formats {
 
             var code = new StringBuilder();
 
-            code.AppendLine(this.CommonCode);
+            code.AppendLine(this.CommonCode.Text);
             code.AppendLine();
-            code.AppendLine(this.SegmentCode);
+            code.AppendLine(this.SegmentCode.Text);
 
             this.format.SegmentCode = code.ToString();
 
             code.Clear();
 
-            code.AppendLine(this.CommonCode);
+            code.AppendLine(this.CommonCode.Text);
             code.AppendLine();
-            code.AppendLine(this.RecordCode);
+            code.AppendLine(this.RecordCode.Text);
 
             this.format.RecordCode = code.ToString();
 

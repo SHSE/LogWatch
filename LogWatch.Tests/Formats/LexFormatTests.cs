@@ -20,6 +20,8 @@ namespace LogWatch.Tests.Formats {
                 message     [^\r\n]+
 
                 record      {timestamp}[ ]{level}[ ]{message}\r\n
+                %%
+                {record} Segment();
                 ";
 
             var format = new LexLogFormat {
