@@ -3,15 +3,17 @@ using ICSharpCode.AvalonEdit.Highlighting;
 using ICSharpCode.AvalonEdit.Highlighting.Xshd;
 
 namespace LogWatch.Features.Formats {
-    public partial class LexView {
-        public LexView() {
+    public partial class LexEditView {
+        public LexEditView() {
             RegisterDefinition("Lex.xshd");
+
+            this.Buttons = new[] {this.OkButton, this.CancelButton};
 
             this.InitializeComponent();
         }
 
-        public LexViewModel ViewModel {
-            get { return (LexViewModel) this.DataContext; }
+        public LexEditViewModel ViewModel {
+            get { return (LexEditViewModel) this.DataContext; }
         }
 
         private static void RegisterDefinition(string fileName) {

@@ -12,17 +12,18 @@ using ICSharpCode.AvalonEdit.Document;
 using LogWatch.Annotations;
 
 namespace LogWatch.Features.Formats {
-    public class LexViewModel : ViewModelBase {
+    public class LexEditViewModel : ViewModelBase {
+        private readonly LexCompiler compiler;
         private readonly LexLogFormat format;
 
         private bool isBusy;
-        private bool isReady;
+        private bool isCompiled;
         private Stream logStream;
         private string logText;
         private string output;
 
-        public LexViewModel() {
-            this.PreviewCommand = new RelayCommand(this.Preview);
+        public LexEditViewModel() {
+            this.RunCommand = new RelayCommand(this.Preview, () => this.isBusy == false);
             this.CommonCode = new TextDocument(
                 "timestamp [^;\\r\\n]+\n" +
                 "level     [^;\\r\\n]+\n" +
@@ -51,6 +52,7 @@ namespace LogWatch.Features.Formats {
                 return;
 
             this.format = new LexLogFormat();
+            this.compiler = new LexCompiler();
         }
 
         public LexLogFormat Format {
@@ -71,8 +73,10 @@ namespace LogWatch.Features.Formats {
             set {
                 if (value.Equals(this.isBusy))
                     return;
+                
                 this.isBusy = value;
-                this.RaisePropertyChanged();
+                this.OnPropertyChanged();
+                this.RunCommand.RaiseCanExecuteChanged();
             }
         }
 
@@ -86,7 +90,7 @@ namespace LogWatch.Features.Formats {
                 if (value == this.logText)
                     return;
                 this.logText = value;
-                this.RaisePropertyChanged();
+                this.OnPropertyChanged();
             }
         }
 
@@ -96,19 +100,19 @@ namespace LogWatch.Features.Formats {
                 if (value == this.output)
                     return;
                 this.output = value;
-                this.RaisePropertyChanged();
+                this.OnPropertyChanged();
             }
         }
 
-        public RelayCommand PreviewCommand { get; set; }
+        public RelayCommand RunCommand { get; set; }
 
-        public bool IsReady {
-            get { return this.isReady; }
+        public bool IsCompiled {
+            get { return this.isCompiled; }
             set {
-                if (value.Equals(this.isReady))
+                if (value.Equals(this.isCompiled))
                     return;
-                this.isReady = value;
-                this.RaisePropertyChanged();
+                this.isCompiled = value;
+                this.OnPropertyChanged();
             }
         }
 
@@ -131,35 +135,37 @@ namespace LogWatch.Features.Formats {
 
         private async void Preview() {
             this.IsBusy = true;
+            this.Output = "Running...";
 
-            var code = new StringBuilder();
+            var segmentsCode = new StringBuilder();
+            segmentsCode.AppendLine(this.CommonCode.Text);
+            segmentsCode.AppendLine();
+            segmentsCode.AppendLine(this.SegmentCode.Text);
 
-            code.AppendLine(this.CommonCode.Text);
-            code.AppendLine();
-            code.AppendLine(this.SegmentCode.Text);
+            var recordsCode = new StringBuilder();
+            recordsCode.AppendLine(this.CommonCode.Text);
+            recordsCode.AppendLine();
+            recordsCode.AppendLine(this.RecordCode.Text);
 
-            this.format.SegmentCode = code.ToString();
+            var diagnostics = new StringWriter();
 
-            code.Clear();
+            this.compiler.Diagnostics = diagnostics;
 
-            code.AppendLine(this.CommonCode.Text);
-            code.AppendLine();
-            code.AppendLine(this.RecordCode.Text);
+            var scanners = await Task.Run(() => this.compiler.Compile(segmentsCode.ToString(), recordsCode.ToString()));
 
-            this.format.RecordCode = code.ToString();
+            if (scanners == null || scanners.RecordsScannerType == null || scanners.SegmentsScannerType == null) {
+                this.IsBusy = false;
+                this.IsCompiled = false;
+                this.Output = diagnostics.ToString();
+                return;
+            }
+
+            this.format.SegmentsScannerType = scanners.SegmentsScannerType;
+            this.format.RecordsScannerType = scanners.RecordsScannerType;
 
             var stream = this.LogStream;
 
             stream.Position = 0;
-
-            if (!await Task.Run((Func<bool>) this.format.TryCompileSegmentsScanner) ||
-                !await Task.Run((Func<bool>) this.format.TryCompileRecordsScanner)) {
-                this.IsBusy = false;
-                this.IsReady = false;
-                this.Output = this.format.Diagnostics.ToString();
-                this.format.Diagnostics = new StringWriter();
-                return;
-            }
 
             var segments = new List<RecordSegment>();
             var cts = new CancellationTokenSource();
@@ -211,11 +217,11 @@ namespace LogWatch.Features.Formats {
             this.Output = outputBuilder.ToString();
 
             this.IsBusy = false;
-            this.IsReady = true;
+            this.IsCompiled = true;
         }
 
         [NotifyPropertyChangedInvocator]
-        protected override void RaisePropertyChanged([CallerMemberName] string propertyName = null) {
+        private void OnPropertyChanged([CallerMemberName] string propertyName = null) {
             base.RaisePropertyChanged(propertyName);
         }
     }

@@ -7,7 +7,6 @@ using LogWatch.Features.Formats;
 using Xunit;
 using System.Reactive.Linq;
 using System.Reactive.Threading.Tasks;
-using System.Linq;
 
 namespace LogWatch.Tests.Formats {
     public class LexFormatTests {
@@ -24,16 +23,11 @@ namespace LogWatch.Tests.Formats {
                 {record} Segment();
                 ";
 
-            var format = new LexLogFormat {
-                Diagnostics = Console.Out,
-                SegmentCode = string.Join(Environment.NewLine,
-                    lex.Split(new[] {Environment.NewLine}, StringSplitOptions.None)
-                       .Select(line => line.Trim()))
-            };
+            var compiler = new LexCompiler {Diagnostics = Console.Out};
 
-            Console.WriteLine(format.SegmentCode);
+            var scanners = compiler.Compile(lex, "%%");
 
-            Assert.True(format.TryCompileSegmentsScanner());
+            var format = new LexLogFormat {SegmentsScannerType = scanners.SegmentsScannerType};
 
             var subject = new ReplaySubject<RecordSegment>();
 
@@ -69,17 +63,11 @@ namespace LogWatch.Tests.Formats {
                 <matched_level>{message} { this.Message = yytext; BEGIN(INITIAL); }
                 ";
 
-            var format = new LexLogFormat {
-                Diagnostics = Console.Out,
-                RecordCode =
-                    string.Join(Environment.NewLine,
-                        lex.Split(new[] {Environment.NewLine}, StringSplitOptions.None)
-                           .Select(line => line.Trim()))
-            };
+            var compiler = new LexCompiler {Diagnostics = Console.Out};
 
-            Console.WriteLine(format.RecordCode);
-
-            Assert.True(format.TryCompileRecordsScanner());
+            var scanners = compiler.Compile("%%", lex);
+            
+            var format = new LexLogFormat {RecordsScannerType = scanners.RecordsScannerType};
 
             var record = format.DeserializeRecord(
                 new ArraySegment<byte>(Encoding.UTF8.GetBytes("01.01.2012T15:41:23 DEBUG Hello world!\r\n")));

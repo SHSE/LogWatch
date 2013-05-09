@@ -162,12 +162,18 @@
     <Compile Include="Controls\IconToggleButton.cs" />
     <Compile Include="DialogService.cs" />
     <Compile Include="Features\Formats\ILogFormatFactory.cs" />
+    <Compile Include="Features\Formats\IScanner.cs" />
     <Compile Include="Features\Formats\LexLogFormatFactory.cs" />
-    <Compile Include="Features\Formats\LexView.xaml.cs">
-      <DependentUpon>LexView.xaml</DependentUpon>
+    <Compile Include="Features\Formats\LexEditView.xaml.cs">
+      <DependentUpon>LexEditView.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Features\Formats\LexViewModel.cs" />
+    <Compile Include="Features\Formats\LexEditViewModel.cs" />
+    <Compile Include="Features\Formats\LexSelectView.xaml.cs">
+      <DependentUpon>LexSelectView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Features\Formats\ScanBase.cs" />
     <Compile Include="Features\Formats\SimpleLogFormatFactory.cs" />
+    <Compile Include="Features\Formats\Tokens.cs" />
     <Compile Include="Features\Records\AutoSizeColumnBehaviour.cs" />
     <Compile Include="Features\Records\FilteredRecordCollection.cs" />
     <Compile Include="Features\Records\GoToIndexEventArgs.cs" />
@@ -196,6 +202,8 @@
     <Compile Include="Features\Formats\LexLogFormat.cs" />
     <Compile Include="Features\Formats\LogFormatFactoryAttribute.cs" />
     <Compile Include="Features\Formats\PlainTextLogFormat.cs" />
+    <Compile Include="LexCompiler.cs" />
+    <Compile Include="LexSelectViewModel.cs" />
     <Compile Include="Messages\RecordFilterChangedMessage.cs" />
     <Compile Include="Features\Sources\LogSourceInfo.cs" />
     <Compile Include="Messages\NavigatedToRecordMessage.cs" />
@@ -242,7 +250,11 @@
     <Compile Include="Features\Sources\LogSourceStatus.cs" />
     <Compile Include="Features\Sources\UdpLogSource.cs" />
     <Compile Include="Util\TextGeometry.cs" />
-    <Page Include="Features\Formats\LexView.xaml">
+    <Page Include="Features\Formats\LexEditView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Features\Formats\LexSelectView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
