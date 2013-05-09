@@ -21,9 +21,12 @@ namespace LogWatch.Features.Formats {
         private Stream logStream;
         private string logText;
         private string output;
+        private string name;
+        private bool save;
 
         public LexEditViewModel() {
             this.RunCommand = new RelayCommand(this.Preview, () => this.isBusy == false);
+
             this.CommonCode = new TextDocument(
                 "timestamp [^;\\r\\n]+\n" +
                 "level     [^;\\r\\n]+\n" +
@@ -65,6 +68,26 @@ namespace LogWatch.Features.Formats {
                 this.logStream = value;
 
                 this.LoadLogText();
+            }
+        }
+
+        public string Name {
+            get { return this.name; }
+            set {
+                if (value == this.name)
+                    return;
+                this.name = value;
+                this.OnPropertyChanged();
+            }
+        }
+
+        public bool Save {
+            get { return this.save; }
+            set {
+                if (value.Equals(this.save))
+                    return;
+                this.save = value;
+                this.OnPropertyChanged();
             }
         }
 

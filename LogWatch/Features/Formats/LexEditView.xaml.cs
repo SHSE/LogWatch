@@ -1,4 +1,5 @@
-﻿using System.Xml;
+﻿using System.Windows.Data;
+using System.Xml;
 using ICSharpCode.AvalonEdit.Highlighting;
 using ICSharpCode.AvalonEdit.Highlighting.Xshd;
 
@@ -10,6 +11,9 @@ namespace LogWatch.Features.Formats {
             this.Buttons = new[] {this.OkButton, this.CancelButton};
 
             this.InitializeComponent();
+
+            BindingOperations.SetBinding(this.OkButton, IsEnabledProperty,
+                new Binding("IsCompiled") {Source = this.DataContext});
         }
 
         public LexEditViewModel ViewModel {

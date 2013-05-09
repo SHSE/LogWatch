@@ -20,22 +20,28 @@ namespace LogWatch.Features.Formats {
                 })
                 .ToArray();
             
+            var compiler = new LexCompiler();
+
             if (presets.Length == 0) {
                 var editView = new LexEditView();
                 var editViewModel = editView.ViewModel;
 
+                editViewModel.LogStream = stream;
+
                 if (editView.ShowDialog() != true || editViewModel.IsCompiled == false)
                     return null;
 
+                //if (!editViewModel.Save || string.IsNullOrEmpty(editViewModel.Name))
                 return editViewModel.Format;
+                
+                //var name = Prefix + Uri.EscapeDataString(editViewModel.Name) + ".dll";
+                //compiler.Compile(editViewModel.SegmentCode.Text, editViewModel.RecordCode.Text, name);
             }
 
             viewModel.SelectedPreset = viewModel.Presets.FirstOrDefault();
 
             if (view.ShowDialog() != true || viewModel.SelectedPreset == null)
                 return null;
-
-            var compiler = new LexCompiler();
 
             var scanners = compiler.LoadCompiled(viewModel.SelectedPreset.FilePath);
 

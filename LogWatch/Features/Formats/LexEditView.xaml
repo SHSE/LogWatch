@@ -137,8 +137,6 @@
         </Grid.RowDefinitions>
         <CheckBox
             x:Name="SaveWithName"
-            Width="34"
-            Height="16"
             HorizontalAlignment="Left"
             VerticalAlignment="Top"
             Content="Save with name:"
@@ -256,12 +254,11 @@
             VerticalScrollBarVisibility="Auto" />
         <Button
             Grid.Column="1"
-            Width="75"
             Height="26"
             HorizontalAlignment="Left"
             VerticalAlignment="Bottom"
             Command="{Binding RunCommand}"
-            Content="run" />
+            Content="compile &amp; run" />
         <Label
             Grid.Row="2"
             Grid.Column="1"
