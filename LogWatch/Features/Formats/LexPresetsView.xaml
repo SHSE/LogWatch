@@ -1,0 +1,47 @@
+﻿<mui:ModernDialog
+    x:Class="LogWatch.Features.Formats.LexPresetsView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:feature="clr-namespace:LogWatch"
+    xmlns:formats="clr-namespace:LogWatch.Features.Formats"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:mui="http://firstfloorsoftware.com/ModernUI"
+    Title="Lex Presets"
+    ResizeMode="CanResize"
+    SizeToContent="Manual"
+    d:DesignHeight="385"
+    d:DesignWidth="323"
+    mc:Ignorable="d">
+
+    <mui:ModernDialog.DataContext>
+        <formats:LexPresetsViewModel ConfirmDelete="{x:Static formats:LexPresetsView.ConfirmDelete}" />
+    </mui:ModernDialog.DataContext>
+
+    <DockPanel>
+        <TextBlock DockPanel.Dock="Top" Text="Selected preset:" />
+        <DockPanel DockPanel.Dock="Bottom" LastChildFill="False">
+            <Button Command="{Binding DeleteCommand}" Content="delete" />
+            <Button
+                Command="{Binding NewCommand}"
+                Content="new"
+                DockPanel.Dock="Right" />
+            <Button
+                Margin="0,0,10,0"
+                Command="{Binding EditCommand}"
+                Content="edit"
+                DockPanel.Dock="Right" />
+            <Button
+                Margin="0,0,10,0"
+                Command="{Binding DuplicateCommand}"
+                Content="duplicate"
+                DockPanel.Dock="Right" />
+        </DockPanel>
+        <ListBox
+            Margin="0,5,0,10"
+            DisplayMemberPath="Name"
+            DockPanel.Dock="Bottom"
+            ItemsSource="{Binding Presets}"
+            SelectedItem="{Binding SelectedPreset}" />
+    </DockPanel>
+</mui:ModernDialog>

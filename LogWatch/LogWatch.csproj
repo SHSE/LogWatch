@@ -119,6 +119,7 @@
       <HintPath>..\packages\Microsoft.Bcl.Immutable.1.0.8-beta\lib\net45\System.Collections.Immutable.dll</HintPath>
     </Reference>
     <Reference Include="System.ComponentModel.Composition" />
+    <Reference Include="System.Configuration" />
     <Reference Include="System.Data" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.Reactive.Core">
@@ -164,12 +165,12 @@
     <Compile Include="Features\Formats\ILogFormatFactory.cs" />
     <Compile Include="Features\Formats\IScanner.cs" />
     <Compile Include="Features\Formats\LexLogFormatFactory.cs" />
-    <Compile Include="Features\Formats\LexEditView.xaml.cs">
-      <DependentUpon>LexEditView.xaml</DependentUpon>
+    <Compile Include="Features\Formats\LexPresetView.xaml.cs">
+      <DependentUpon>LexPresetView.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Features\Formats\LexEditViewModel.cs" />
-    <Compile Include="Features\Formats\LexSelectView.xaml.cs">
-      <DependentUpon>LexSelectView.xaml</DependentUpon>
+    <Compile Include="Features\Formats\LexPresetViewModel.cs" />
+    <Compile Include="Features\Formats\LexPresetsView.xaml.cs">
+      <DependentUpon>LexPresetsView.xaml</DependentUpon>
     </Compile>
     <Compile Include="Features\Formats\ScanBase.cs" />
     <Compile Include="Features\Formats\SimpleLogFormatFactory.cs" />
@@ -202,8 +203,9 @@
     <Compile Include="Features\Formats\LexLogFormat.cs" />
     <Compile Include="Features\Formats\LogFormatFactoryAttribute.cs" />
     <Compile Include="Features\Formats\PlainTextLogFormat.cs" />
-    <Compile Include="LexCompiler.cs" />
-    <Compile Include="LexSelectViewModel.cs" />
+    <Compile Include="Features\Formats\LexCompiler.cs" />
+    <Compile Include="Features\Formats\LexPreset.cs" />
+    <Compile Include="Features\Formats\LexPresetsViewModel.cs" />
     <Compile Include="Messages\RecordFilterChangedMessage.cs" />
     <Compile Include="Features\Sources\LogSourceInfo.cs" />
     <Compile Include="Messages\NavigatedToRecordMessage.cs" />
@@ -250,13 +252,13 @@
     <Compile Include="Features\Sources\LogSourceStatus.cs" />
     <Compile Include="Features\Sources\UdpLogSource.cs" />
     <Compile Include="Util\TextGeometry.cs" />
-    <Page Include="Features\Formats\LexEditView.xaml">
+    <Page Include="Features\Formats\LexPresetView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Features\Formats\LexSelectView.xaml">
-      <SubType>Designer</SubType>
+    <Page Include="Features\Formats\LexPresetsView.xaml">
       <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
     </Page>
     <Page Include="Features\RecordDetails\RecordDetailsView.xaml">
       <SubType>Designer</SubType>
@@ -336,6 +338,7 @@
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
     </None>
     <AppDesigner Include="Properties\" />
     <Content Include="Lex.xshd">

@@ -12,7 +12,7 @@ using ICSharpCode.AvalonEdit.Document;
 using LogWatch.Annotations;
 
 namespace LogWatch.Features.Formats {
-    public class LexEditViewModel : ViewModelBase {
+    public class LexPresetViewModel : ViewModelBase {
         private readonly LexCompiler compiler;
         private readonly LexLogFormat format;
 
@@ -20,42 +20,53 @@ namespace LogWatch.Features.Formats {
         private bool isCompiled;
         private Stream logStream;
         private string logText;
-        private string output;
         private string name;
-        private bool save;
+        private string output;
 
-        public LexEditViewModel() {
+        public LexPresetViewModel() {
+            this.CommonCode = new TextDocument();
+            this.SegmentCode = new TextDocument();
+            this.RecordCode = new TextDocument();
+
+            this.CommonCode.TextChanged += (sender, args) => this.IsCompiled = false;
+            this.SegmentCode.TextChanged += (sender, args) => this.IsCompiled = false;
+            this.RecordCode.TextChanged += (sender, args) => this.IsCompiled = false;
+
             this.RunCommand = new RelayCommand(this.Preview, () => this.isBusy == false);
 
-            this.CommonCode = new TextDocument(
-                "timestamp [^;\\r\\n]+\n" +
-                "level     [^;\\r\\n]+\n" +
-                "logger    [^;\\r\\n]+\n" +
-                "message   [^;\\r\\n]+\n" +
-                "exception [^;\\r\\n]*");
+            if (this.IsInDesignMode) {
+                this.Name = "Test preset";
 
-            this.SegmentCode = new TextDocument(
-                "record {timestamp}[;]{message}[;]{logger}[;]{level}[;]{exception}\\r\\n\n" +
-                "%%\n" +
-                "{record} Segment();");
+                this.CommonCode.Text =
+                    "timestamp [^;\\r\\n]+\n" +
+                    "level     [^;\\r\\n]+\n" +
+                    "logger    [^;\\r\\n]+\n" +
+                    "message   [^;\\r\\n]+\n" +
+                    "exception [^;\\r\\n]*";
 
-            this.RecordCode = new TextDocument(
-                "%x MATCHED_TIMESTAMP\n" +
-                "%x MATCHED_MESSAGE\n" +
-                "%x MATCHED_LEVEL\n" +
-                "%x MATCHED_LOGGER\n" +
-                "%%\n" +
-                "<INITIAL>{timestamp} Timestamp = yytext; BEGIN(MATCHED_TIMESTAMP);\n" +
-                "<MATCHED_TIMESTAMP>{message} this.Message = yytext; BEGIN(MATCHED_MESSAGE);\n" +
-                "<MATCHED_MESSAGE>{logger} this.Logger = yytext; BEGIN(MATCHED_LOGGER);\n" +
-                "<MATCHED_LOGGER>{level} this.Level = yytext; BEGIN(MATCHED_LEVEL);\n" +
-                "<MATCHED_LEVEL>{exception} this.Exception = yytext; BEGIN(INITIAL);");
+                this.SegmentCode.Text =
+                    "record {timestamp}[;]{message}[;]{logger}[;]{level}[;]{exception}\\r\\n\n" +
+                    "%%\n" +
+                    "{record} Segment();";
 
-            if (this.IsInDesignMode)
+                this.RecordCode.Text =
+                    "%x MATCHED_TIMESTAMP\n" +
+                    "%x MATCHED_MESSAGE\n" +
+                    "%x MATCHED_LEVEL\n" +
+                    "%x MATCHED_LOGGER\n" +
+                    "%%\n" +
+                    "<INITIAL>{timestamp} Timestamp = yytext; BEGIN(MATCHED_TIMESTAMP);\n" +
+                    "<MATCHED_TIMESTAMP>{message} this.Message = yytext; BEGIN(MATCHED_MESSAGE);\n" +
+                    "<MATCHED_MESSAGE>{logger} this.Logger = yytext; BEGIN(MATCHED_LOGGER);\n" +
+                    "<MATCHED_LOGGER>{level} this.Level = yytext; BEGIN(MATCHED_LEVEL);\n" +
+                    "<MATCHED_LEVEL>{exception} this.Exception = yytext; BEGIN(INITIAL);";
                 return;
+            }
 
             this.format = new LexLogFormat();
             this.compiler = new LexCompiler();
+
+            this.Name = "(Current Preset)";
         }
 
         public LexLogFormat Format {
@@ -71,32 +82,12 @@ namespace LogWatch.Features.Formats {
             }
         }
 
-        public string Name {
-            get { return this.name; }
-            set {
-                if (value == this.name)
-                    return;
-                this.name = value;
-                this.OnPropertyChanged();
-            }
-        }
-
-        public bool Save {
-            get { return this.save; }
-            set {
-                if (value.Equals(this.save))
-                    return;
-                this.save = value;
-                this.OnPropertyChanged();
-            }
-        }
-
         public bool IsBusy {
             get { return this.isBusy; }
             set {
                 if (value.Equals(this.isBusy))
                     return;
-                
+
                 this.isBusy = value;
                 this.OnPropertyChanged();
                 this.RunCommand.RaiseCanExecuteChanged();
@@ -127,14 +118,24 @@ namespace LogWatch.Features.Formats {
             }
         }
 
-        public RelayCommand RunCommand { get; set; }
-
         public bool IsCompiled {
             get { return this.isCompiled; }
             set {
                 if (value.Equals(this.isCompiled))
                     return;
                 this.isCompiled = value;
+                this.OnPropertyChanged();
+            }
+        }
+
+        public RelayCommand RunCommand { get; set; }
+
+        public string Name {
+            get { return this.name; }
+            set {
+                if (value == this.name)
+                    return;
+                this.name = value;
                 this.OnPropertyChanged();
             }
         }

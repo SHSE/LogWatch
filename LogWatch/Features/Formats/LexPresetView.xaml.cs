@@ -1,23 +1,17 @@
-﻿using System.Windows.Data;
-using System.Xml;
+﻿using System.Xml;
 using ICSharpCode.AvalonEdit.Highlighting;
 using ICSharpCode.AvalonEdit.Highlighting.Xshd;
 
 namespace LogWatch.Features.Formats {
-    public partial class LexEditView {
-        public LexEditView() {
+    public partial class LexPresetView {
+        public LexPresetView() {
             RegisterDefinition("Lex.xshd");
 
-            this.Buttons = new[] {this.OkButton, this.CancelButton};
-
             this.InitializeComponent();
-
-            BindingOperations.SetBinding(this.OkButton, IsEnabledProperty,
-                new Binding("IsCompiled") {Source = this.DataContext});
         }
 
-        public LexEditViewModel ViewModel {
-            get { return (LexEditViewModel) this.DataContext; }
+        public LexPresetViewModel ViewModel {
+            get { return (LexPresetViewModel) this.DataContext; }
         }
 
         private static void RegisterDefinition(string fileName) {

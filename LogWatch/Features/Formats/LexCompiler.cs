@@ -5,11 +5,10 @@ using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
 using System.Text;
-using LogWatch.Features.Formats;
 using Roslyn.Compilers;
 using Roslyn.Compilers.CSharp;
 
-namespace LogWatch {
+namespace LogWatch.Features.Formats {
     public class LexCompiler {
         private const string SegmentsScannerTypeName = "LogWatch.Features.Formats.Lex.Segments.Scanner";
         private const string RecordsScannerTypeName = "LogWatch.Features.Formats.Lex.Records.Scanner";
@@ -28,9 +27,11 @@ namespace LogWatch {
         public LexFormatScanners Compile(
             string segmentScannerCode,
             string recordScannerCode,
-            string saveAssemblyTo = null) {
+            Stream saveAssemblyTo = null) {
             segmentScannerCode = Trim(segmentScannerCode);
             recordScannerCode = Trim(recordScannerCode);
+
+            var result = new LexFormatScanners();
 
             this.Diagnostics.WriteLine("Compiling segments scanner");
 
@@ -46,7 +47,7 @@ namespace LogWatch {
                 segmentScannerCode);
 
             if (segmentsSyntaxTree == null)
-                return null;
+                return result;
 
             this.Diagnostics.WriteLine("Compiling records scanner");
 
@@ -59,7 +60,7 @@ namespace LogWatch {
                 recordScannerCode);
 
             if (recordsSyntaxTree == null)
-                return null;
+                return result;
 
             this.Diagnostics.WriteLine("Creating assembly");
 
@@ -70,27 +71,42 @@ namespace LogWatch {
 
             var module = assembly.DefineDynamicModule(name);
 
-            var segmentsResult = compilation.Emit(module);
+            var emitResult = compilation.Emit(module);
 
-            foreach (var diagnostic in segmentsResult.Diagnostics)
+            foreach (var diagnostic in emitResult.Diagnostics)
                 this.Diagnostics.WriteLine(diagnostic);
 
+            if (!emitResult.Success)
+                return result;
+
             if (saveAssemblyTo != null)
-                assembly.Save(saveAssemblyTo);
+                compilation.Emit(saveAssemblyTo);
 
             return new LexFormatScanners {
                 SegmentsScannerType = assembly.GetType(SegmentsScannerTypeName),
-                RecordsScannerType = assembly.GetType(RecordsScannerTypeName)
+                RecordsScannerType = assembly.GetType(RecordsScannerTypeName),
+                Success = true
             };
         }
 
-        public LexFormatScanners LoadCompiled(string assemblyFilePath) {
-            var assembly = Assembly.LoadFile(assemblyFilePath);
+        public LexFormatScanners LoadCompiled(Stream stream) {
+            try {
+                var memoryStream = new MemoryStream(4096);
 
-            return new LexFormatScanners {
-                SegmentsScannerType = assembly.GetType(SegmentsScannerTypeName),
-                RecordsScannerType = assembly.GetType(RecordsScannerTypeName)
-            };
+                stream.CopyTo(memoryStream);
+
+                var assembly = Assembly.Load(memoryStream.ToArray());
+
+                return new LexFormatScanners {
+                    SegmentsScannerType = assembly.GetType(SegmentsScannerTypeName),
+                    RecordsScannerType = assembly.GetType(RecordsScannerTypeName),
+                    Success = true
+                };
+            } catch (FileLoadException) {
+                return new LexFormatScanners {Success = false};
+            } catch (BadImageFormatException) {
+                return new LexFormatScanners {Success = false};
+            }
         }
 
         private string CompileLex(string code) {
@@ -144,6 +160,7 @@ namespace LogWatch {
         public class LexFormatScanners {
             public Type SegmentsScannerType { get; set; }
             public Type RecordsScannerType { get; set; }
+            public bool Success { get; set; }
         }
     }
 }

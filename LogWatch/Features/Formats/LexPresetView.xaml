@@ -1,17 +1,15 @@
 ﻿<mui:ModernDialog
-    x:Class="LogWatch.Features.Formats.LexEditView"
+    x:Class="LogWatch.Features.Formats.LexPresetView"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:avalonedit="clr-namespace:ICSharpCode.AvalonEdit;assembly=ICSharpCode.AvalonEdit"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:editing="clr-namespace:ICSharpCode.AvalonEdit.Editing;assembly=ICSharpCode.AvalonEdit"
-    xmlns:ei="clr-namespace:Microsoft.Expression.Interactivity.Core;assembly=Microsoft.Expression.Interactions"
     xmlns:feature="clr-namespace:LogWatch.Features.Formats"
-    xmlns:i="clr-namespace:System.Windows.Interactivity;assembly=System.Windows.Interactivity"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:mui="http://firstfloorsoftware.com/ModernUI"
     x:Name="Root"
-    Title="Lex Format"
+    Title="Lex Preset"
     Width="902"
     Height="624"
     MaxWidth="Infinity"
@@ -119,11 +117,33 @@
                 </Setter.Value>
             </Setter>
         </Style>
+
+        <x:Array x:Key="Buttons" Type="Button">
+            <Button
+                Margin="4,0,0,0"
+                Command="{Binding RunCommand}"
+                Content="compile &amp; run" />
+            <Button
+                Margin="4,0,0,0"
+                Command="{Binding CloseTrueCommand, ElementName=Root}"
+                Content="save &amp; close"
+                IsDefault="True"
+                IsEnabled="{Binding IsCompiled}" />
+            <Button
+                Margin="4,0,0,0"
+                Command="{Binding CloseFalseCommand, ElementName=Root}"
+                Content="close"
+                IsCancel="True" />
+        </x:Array>
     </mui:ModernDialog.Resources>
 
     <mui:ModernDialog.DataContext>
-        <feature:LexEditViewModel />
+        <feature:LexPresetViewModel />
     </mui:ModernDialog.DataContext>
+
+    <mui:ModernDialog.Buttons>
+        <StaticResource ResourceKey="Buttons" />
+    </mui:ModernDialog.Buttons>
 
     <Grid>
         <Grid.ColumnDefinitions>
@@ -135,24 +155,19 @@
             <RowDefinition Height="300*" />
             <RowDefinition Height="200*" />
         </Grid.RowDefinitions>
-        <CheckBox
-            x:Name="SaveWithName"
+
+        <Label
+            Margin="0,3,0,0"
             HorizontalAlignment="Left"
             VerticalAlignment="Top"
-            Content="Save with name:"
+            Content="Name:"
             Padding="0" />
+
         <TextBox
-            Grid.Row="2"
-            Grid.Column="1"
-            Margin="0,31,0,0"
-            AcceptsReturn="True"
-            FontFamily="Consolas"
-            Foreground="{DynamicResource InputText}"
-            HorizontalScrollBarVisibility="Auto"
-            IsEnabled="{Binding ElementName=SaveWithName, Path=IsChecked}"
-            IsReadOnly="True"
-            Text="{Binding Output}"
-            VerticalScrollBarVisibility="Auto" />
+            MinWidth="200"
+            Margin="39,0,0,0"
+            HorizontalAlignment="Left"
+            Text="{Binding Name}" />
 
         <Grid
             Grid.Row="1"
@@ -230,7 +245,6 @@
             Width="5"
             HorizontalAlignment="Right"
             Background="Transparent" />
-        <TextBox Margin="0,21,10,0" />
         <Label
             Grid.Row="1"
             Grid.Column="1"
@@ -252,13 +266,6 @@
             IsReadOnly="True"
             Text="{Binding LogText}"
             VerticalScrollBarVisibility="Auto" />
-        <Button
-            Grid.Column="1"
-            Height="26"
-            HorizontalAlignment="Left"
-            VerticalAlignment="Bottom"
-            Command="{Binding RunCommand}"
-            Content="compile &amp; run" />
         <Label
             Grid.Row="2"
             Grid.Column="1"
@@ -269,6 +276,17 @@
             VerticalAlignment="Top"
             Content="Output:"
             Padding="0" />
+        <TextBox
+            Grid.Row="2"
+            Grid.Column="1"
+            Margin="0,31,0,0"
+            AcceptsReturn="True"
+            FontFamily="Consolas"
+            Foreground="{DynamicResource InputText}"
+            HorizontalScrollBarVisibility="Auto"
+            IsReadOnly="True"
+            Text="{Binding Output}"
+            VerticalScrollBarVisibility="Auto" />
 
     </Grid>
 </mui:ModernDialog>
