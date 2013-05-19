@@ -27,12 +27,12 @@
                 Content="new"
                 DockPanel.Dock="Right" />
             <Button
-                Margin="0,0,10,0"
+                Margin="0,0,4,0"
                 Command="{Binding EditCommand}"
                 Content="edit"
                 DockPanel.Dock="Right" />
             <Button
-                Margin="0,0,10,0"
+                Margin="0,0,4,0"
                 Command="{Binding DuplicateCommand}"
                 Content="duplicate"
                 DockPanel.Dock="Right" />

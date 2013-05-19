@@ -1,14 +1,13 @@
 ﻿using System;
 using System.IO;
+using System.Threading;
 
 namespace LogWatch.Features.Formats {
     public abstract class ScanBase : IScanner {
         public abstract string Text { get; }
         public Action<long, int> OffsetCallback { get; set; }
 
-        public int Parse() {
-            return this.yylex();
-        }
+        public abstract int Parse(CancellationToken cancellationToken);
 
         public abstract void Begin();
         public abstract Stream Source { set; }

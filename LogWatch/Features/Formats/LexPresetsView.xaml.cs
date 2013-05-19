@@ -10,6 +10,7 @@ namespace LogWatch.Features.Formats {
             this.InitializeComponent();
 
             this.Buttons = new[] {this.OkButton, this.CancelButton};
+            this.OkButton.Content = "select";
         }
 
         public LexPresetsViewModel ViewModel {

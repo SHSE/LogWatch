@@ -40,10 +40,13 @@ namespace LogWatch.Features.Formats {
             var segmentsSyntaxTree = this.CreateSyntaxTree(
                 "%using " + typeof (ScanBase).Namespace + ";\n" +
                 "%namespace LogWatch.Features.Formats.Lex.Segments\n" +
-                "%{\r\npublic override void Begin() { BEGIN(INITIAL); }\r\n%}\n" +
-                "%{\r\npublic override string Text { get { return this.yytext; } }\r\n%}\n" +
-                "%{\r\npublic void Segment() { this.NextOffset((long) yypos, yyleng); }\r\n%}\n" +
-                "%{\r\npublic override System.IO.Stream Source { set { this.SetSource(value); } }\r\n%}\n" +
+                "%{\n" +
+                "public override void Begin() { BEGIN(INITIAL); }\n" +
+                "public override string Text { get { return this.yytext; } }\n" +
+                "public void Segment() { this.NextOffset((long) yypos, yyleng); }\n" +
+                "public override System.IO.Stream Source { set { this.SetSource(value); } }\n" +
+                "public override int Parse(System.Threading.CancellationToken ct) { int next; do { next = Scan(); } while (!ct.IsCancellationRequested && next >= parserMax); return next; }\n" +
+                "%}\n" +
                 segmentScannerCode);
 
             if (segmentsSyntaxTree == null)
@@ -54,9 +57,12 @@ namespace LogWatch.Features.Formats {
             var recordsSyntaxTree = this.CreateSyntaxTree(
                 "%using " + typeof (ScanBase).Namespace + ";\n" +
                 "%namespace LogWatch.Features.Formats.Lex.Records\n" +
-                "%{\r\npublic override void Begin() { BEGIN(INITIAL); }\r\n%}\n" +
-                "%{\r\npublic override string Text { get { return this.yytext; } }\r\n%}\n" +
-                "%{\r\npublic override System.IO.Stream Source { set { this.SetSource(value); } }\r\n%}\n" +
+                "%{\n" +
+                "public override void Begin() { BEGIN(INITIAL); }\n" +
+                "npublic override string Text { get { return this.yytext; } }\n" +
+                "public override System.IO.Stream Source { set { this.SetSource(value); } }\n" +
+                "public override int Parse(System.Threading.CancellationToken ct) { int next; do { next = Scan(); } while (!ct.IsCancellationRequested && next >= parserMax); return next; }\n" +
+                "%}\n" +
                 recordScannerCode);
 
             if (recordsSyntaxTree == null)

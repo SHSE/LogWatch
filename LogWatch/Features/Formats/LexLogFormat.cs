@@ -31,7 +31,7 @@ namespace LogWatch.Features.Formats {
             scanner.Begin();
             scanner.Reset();
             scanner.Source = new MemoryStream(segment.Array, segment.Offset, segment.Count);
-            scanner.Parse();
+            scanner.Parse(CancellationToken.None);
 
             return new Record {
                 Level = GetLevel(scanner.Level),
@@ -47,13 +47,20 @@ namespace LogWatch.Features.Formats {
             CancellationToken cancellationToken) {
             return Task.Factory.StartNew(() => {
                 var scanner = (IScanner) Activator.CreateInstance(this.SegmentsScannerType);
+                var lastSegment = default(RecordSegment);
 
-                scanner.OffsetCallback = (offset, length) => observer.OnNext(new RecordSegment(offset, length));
+                scanner.OffsetCallback = (offset, length) => {
+                    if (length > 0) {
+                        var segment = new RecordSegment(offset, length);
+                        lastSegment = segment;
+                        observer.OnNext(segment);
+                    }
+                };
 
                 scanner.Source = stream;
-                scanner.Parse();
+                scanner.Parse(cancellationToken);
 
-                return -1L;
+                return lastSegment.End;
             }, cancellationToken,
                 TaskCreationOptions.LongRunning,
                 this.TaskScheduler);
