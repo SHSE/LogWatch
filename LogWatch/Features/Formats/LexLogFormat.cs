@@ -37,7 +37,9 @@ namespace LogWatch.Features.Formats {
                 Level = GetLevel(scanner.Level),
                 Logger = scanner.Logger,
                 Message = scanner.Message,
-                Exception = scanner.Exception
+                Exception = scanner.Exception,
+                Timestamp = scanner.Timestamp,
+                Thread = scanner.Thread
             };
         }
 
@@ -48,7 +50,7 @@ namespace LogWatch.Features.Formats {
             return Task.Factory.StartNew(() => {
                 var scanner = (IScanner) Activator.CreateInstance(this.SegmentsScannerType);
                 var lastSegment = default(RecordSegment);
-
+                
                 scanner.OffsetCallback = (offset, length) => {
                     if (length > 0) {
                         var segment = new RecordSegment(offset, length);

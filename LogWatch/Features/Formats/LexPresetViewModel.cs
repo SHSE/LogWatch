@@ -24,6 +24,7 @@ namespace LogWatch.Features.Formats {
         private string logText;
         private string name;
         private string output;
+        private MemoryStream textStream;
 
         public LexPresetViewModel() {
             this.CommonCode = new TextDocument();
@@ -186,9 +187,11 @@ namespace LogWatch.Features.Formats {
                     new LexCodeCompletionData("Text"),
                     new LexCodeCompletionData("Timestamp"),
                     new LexCodeCompletionData("Level"),
+                    new LexCodeCompletionData("Thread"),
                     new LexCodeCompletionData("Logger"),
                     new LexCodeCompletionData("Message"),
                     new LexCodeCompletionData("Exception"),
+                    new LexCodeCompletionData("TextAsTimestamp"),
                     new LexCodeCompletionData("%x", "%x "),
                     new LexCodeCompletionData("%%"),
                 }
@@ -204,10 +207,11 @@ namespace LogWatch.Features.Formats {
             using (var reader = new StreamReader(this.logStream, Encoding.UTF8, true, 4096, true)) {
                 var text = new StringBuilder();
 
-                for (var i = 0; i < 5 && !reader.EndOfStream; i++)
+                for (var i = 0; i < 20 && !reader.EndOfStream; i++)
                     text.AppendLine(await reader.ReadLineAsync());
 
                 this.LogText = text.ToString();
+                this.textStream = new MemoryStream(Encoding.UTF8.GetBytes(this.logText));
             }
 
             this.IsBusy = false;
@@ -243,7 +247,7 @@ namespace LogWatch.Features.Formats {
             this.format.SegmentsScannerType = scanners.SegmentsScannerType;
             this.format.RecordsScannerType = scanners.RecordsScannerType;
 
-            var stream = this.LogStream;
+            var stream = this.textStream;
 
             stream.Position = 0;
 

@@ -15,10 +15,6 @@
 			<Begin foreground="LightPink">^%x\s+</Begin>
 		</Span>
     
-    <!--<Span foreground="LightPink">
-			<Begin>%</Begin>
-		</Span>-->
-    
     <Span>
       <Begin foreground="LightBlue">^\w+\s+</Begin>
       <RuleSet name="DefinitionValue">
@@ -39,6 +35,7 @@
     <Keywords foreground="SkyBlue">
       <Word>Timestamp</Word>
       <Word>Level</Word>
+      <Word>Thread</Word>
       <Word>Logger</Word>
       <Word>Message</Word>
       <Word>Exception</Word>
@@ -55,6 +52,10 @@
     <Rule foreground="LightGray">
       (?&lt;=BEGIN[(])[a-zA-Z_]+(?=[)])
     </Rule>
+    
+    <Keywords foreground="LightGray">
+      <Word>TextAsTimestamp</Word>
+    </Keywords>
     
     <Keywords foreground="LightCoral">
       <Word>INITIAL</Word>

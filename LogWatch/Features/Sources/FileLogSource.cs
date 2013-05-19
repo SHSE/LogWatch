@@ -127,10 +127,11 @@ namespace LogWatch.Features.Sources {
                     if (this.segments.TryAdd(index, segment)) {
                         var length = this.streamLength;
 
-                        this.status.OnNext(new LogSourceStatus(
-                            index + 1,
-                            segment.End < length,
-                            (int) (100.0*this.segmentsStream.Position/length)));
+                        if (!this.isDisposed)
+                            this.status.OnNext(new LogSourceStatus(
+                                index + 1,
+                                segment.End < length,
+                                (int) (100.0*this.segmentsStream.Position/length)));
                     }
                 });
 

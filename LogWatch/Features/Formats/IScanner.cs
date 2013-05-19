@@ -4,11 +4,12 @@ using System.Threading;
 
 namespace LogWatch.Features.Formats {
     public interface IScanner {
-        string Timestamp { get; }
+        DateTime? Timestamp { get; }
         string Level { get; }
         string Logger { get; }
         string Message { get; }
         string Exception { get; }
+        string Thread { get; }
 
         Action<long, int> OffsetCallback { set; }
         Stream Source { set; }
