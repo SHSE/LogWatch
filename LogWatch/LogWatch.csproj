@@ -206,6 +206,7 @@
     <Compile Include="Features\Formats\LexCompiler.cs" />
     <Compile Include="Features\Formats\LexPreset.cs" />
     <Compile Include="Features\Formats\LexPresetsViewModel.cs" />
+    <Compile Include="LexCodeCompletionData.cs" />
     <Compile Include="Messages\RecordFilterChangedMessage.cs" />
     <Compile Include="Features\Sources\LogSourceInfo.cs" />
     <Compile Include="Messages\NavigatedToRecordMessage.cs" />
@@ -343,6 +344,7 @@
     <AppDesigner Include="Properties\" />
     <Content Include="Lex.xshd">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <SubType>Designer</SubType>
     </Content>
   </ItemGroup>
   <ItemGroup>

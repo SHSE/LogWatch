@@ -21,9 +21,15 @@
     
     <Span>
       <Begin foreground="LightBlue">^\w+\s+</Begin>
-      <RuleSet>
+      <RuleSet name="DefinitionValue">
         <Rule foreground="LightGreen">
-          {\w+}
+          {[a-zA-Z_]+}
+        </Rule>
+        <Rule foreground="Yellow">
+          \\[rntws]
+        </Rule>
+        <Rule foreground="Gray">
+          \\[\[\]\-]
         </Rule>
       </RuleSet>
     </Span>

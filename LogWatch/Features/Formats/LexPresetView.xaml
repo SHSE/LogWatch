@@ -203,6 +203,7 @@
                 Content="Segment:"
                 Padding="0" />
             <avalonedit:TextEditor
+                x:Name="SegmentCodeEditor"
                 Grid.Row="1"
                 Margin="0,31,0,0"
                 Document="{Binding SegmentCode}"
@@ -219,6 +220,7 @@
                 Content="Record:"
                 Padding="0" />
             <avalonedit:TextEditor
+                x:Name="RecordCodeEditor"
                 Grid.Row="2"
                 Margin="0,31,0,0"
                 Document="{Binding RecordCode}"

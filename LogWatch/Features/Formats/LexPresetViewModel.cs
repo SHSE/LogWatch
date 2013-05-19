@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Reactive.Subjects;
 using System.Runtime.CompilerServices;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using GalaSoft.MvvmLight;
@@ -28,9 +30,24 @@ namespace LogWatch.Features.Formats {
             this.SegmentCode = new TextDocument();
             this.RecordCode = new TextDocument();
 
-            this.CommonCode.TextChanged += (sender, args) => this.IsCompiled = false;
-            this.SegmentCode.TextChanged += (sender, args) => this.IsCompiled = false;
-            this.RecordCode.TextChanged += (sender, args) => this.IsCompiled = false;
+            this.SegmentCodeCompletion = new LexCodeCompletionData[0];
+            this.RecordCodeCompletion = new LexCodeCompletionData[0];
+
+            this.CommonCode.TextChanged += (sender, args) => {
+                this.IsCompiled = false;
+                this.SegmentCodeCompletion = this.CreateCodeCompletion(this.SegmentCode.Text);
+                this.RecordCodeCompletion = this.CreateCodeCompletion(this.RecordCode.Text);
+            };
+
+            this.SegmentCode.TextChanged += (sender, args) => {
+                this.IsCompiled = false;
+                this.SegmentCodeCompletion = this.CreateCodeCompletion(this.SegmentCode.Text);
+            };
+
+            this.RecordCode.TextChanged += (sender, args) => {
+                this.IsCompiled = false;
+                this.RecordCodeCompletion = this.CreateCodeCompletion(this.RecordCode.Text);
+            };
 
             this.RunCommand = new RelayCommand(this.Preview, () => this.isBusy == false);
 
@@ -68,6 +85,9 @@ namespace LogWatch.Features.Formats {
 
             this.Name = "(Current Preset)";
         }
+
+        public IReadOnlyCollection<LexCodeCompletionData> RecordCodeCompletion { get; private set; }
+        public IReadOnlyCollection<LexCodeCompletionData> SegmentCodeCompletion { get; private set; }
 
         public LexLogFormat Format {
             get { return this.format; }
@@ -138,6 +158,42 @@ namespace LogWatch.Features.Formats {
                 this.name = value;
                 this.OnPropertyChanged();
             }
+        }
+
+        private IReadOnlyCollection<LexCodeCompletionData> CreateCodeCompletion(string code) {
+            var lines =
+                from line in string.Concat(this.CommonCode.Text, Environment.NewLine, code).Split('\r', '\n')
+                where !string.IsNullOrEmpty(line)
+                select line;
+
+            lines = lines.ToArray();
+
+            return new[] {
+                from line in lines
+                let defMatch = Regex.Match(line, @"^(?<DefinitionName>[a-zA-Z_]+)\s+\S+")
+                where defMatch.Success
+                let definitionValue = defMatch.Groups["DefinitionName"].Value
+                select new LexCodeCompletionData(definitionValue),
+                from line in lines
+                let stateMatch = Regex.Match(line, @"^%x\s+(?<StateName>[a-zA-Z_]+)")
+                where stateMatch.Success
+                let stateName = stateMatch.Groups["StateName"].Value
+                select new LexCodeCompletionData(stateName),
+                new[] {
+                    new LexCodeCompletionData("Segment", "Segment();"),
+                    new LexCodeCompletionData("BEGIN"),
+                    new LexCodeCompletionData("INITIAL"),
+                    new LexCodeCompletionData("Text"),
+                    new LexCodeCompletionData("Timestamp"),
+                    new LexCodeCompletionData("Level"),
+                    new LexCodeCompletionData("Logger"),
+                    new LexCodeCompletionData("Message"),
+                    new LexCodeCompletionData("Exception"),
+                    new LexCodeCompletionData("%x", "%x "),
+                    new LexCodeCompletionData("%%"),
+                }
+            }.Aggregate(Enumerable.Concat)
+             .ToArray();
         }
 
         private async void LoadLogText() {

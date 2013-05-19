@@ -30,7 +30,33 @@ namespace LogWatch.Features.Formats {
             viewModel.SelectedPreset = viewModel.Presets.FirstOrDefault();
             viewModel.EditPreset = preset => ShowEditPresetDialog(stream, preset);
             viewModel.CreateNewPreset = () => {
-                var preset = new LexPreset {Name = "New Preset"};
+                var preset = new LexPreset {
+                    Name = "New Preset",
+                    CommonCode =
+                        "timestamp [^;\\r\\n]+\n" +
+                        "level     [^;\\r\\n]+\n" +
+                        "logger    [^;\\r\\n]+\n" +
+                        "message   [^;\\r\\n]+\n" +
+                        "exception [^;\\r\\n]*",
+
+                    SegmentCode =
+                        "record {timestamp}[;]{message}[;]{logger}[;]{level}[;]{exception}\\r\\n\n" +
+                        "%%\n" +
+                        "{record} Segment();",
+
+                    RecordCode =
+                        "%x MATCHED_TIMESTAMP\n" +
+                        "%x MATCHED_MESSAGE\n" +
+                        "%x MATCHED_LEVEL\n" +
+                        "%x MATCHED_LOGGER\n" +
+                        "%%\n" +
+                        "<INITIAL>{timestamp} Timestamp = yytext; BEGIN(MATCHED_TIMESTAMP);\n" +
+                        "<MATCHED_TIMESTAMP>{message} this.Message = yytext; BEGIN(MATCHED_MESSAGE);\n" +
+                        "<MATCHED_MESSAGE>{logger} this.Logger = yytext; BEGIN(MATCHED_LOGGER);\n" +
+                        "<MATCHED_LOGGER>{level} this.Level = yytext; BEGIN(MATCHED_LEVEL);\n" +
+                        "<MATCHED_LEVEL>{exception} this.Exception = yytext; BEGIN(INITIAL);"
+                };
+
                 return ShowEditPresetDialog(stream, preset) ? preset : null;
             };
 
