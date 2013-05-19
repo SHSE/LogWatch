@@ -19,6 +19,7 @@ LogWatch allows you to view output from NLog and Log4Net loggers.
 * Receives log records via network
 * Provides quick jump to a next Trace/Debug/Info/Warn/Error/Fatal record functionality
 * Search using simple text search or regular expressions (press Ctrol+F to activate)
+* Custom log parser using [Lex](http://dinosaur.compilertools.net/lex) syntax
 
 ## File source
 
@@ -48,5 +49,5 @@ NLog configuration:
 
 ## TODO
 
+- [ ] documentation
 - [ ] custom log record properties
-- [ ] user provided parser using [Lex](http://dinosaur.compilertools.net/lex) syntax
