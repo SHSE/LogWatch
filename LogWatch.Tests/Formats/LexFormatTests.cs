@@ -57,7 +57,7 @@ namespace LogWatch.Tests.Formats {
                 %%
 
                 <INITIAL,matched_level> {
-                    {timestamp} { this.Timestamp = yytext; BEGIN(INITIAL); }
+                    {timestamp} { this.Timestamp = TextAsTimestamp(""MM.dd.yyyyTHH:mm:ss""); BEGIN(INITIAL); }
                     {level} { this.Level = yytext; BEGIN(matched_level); }
                 }
                 <matched_level>{message} { this.Message = yytext; BEGIN(INITIAL); }
