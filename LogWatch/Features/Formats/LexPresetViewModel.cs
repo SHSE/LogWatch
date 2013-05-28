@@ -308,5 +308,7 @@ namespace LogWatch.Features.Formats {
         private void OnPropertyChanged([CallerMemberName] string propertyName = null) {
             base.RaisePropertyChanged(propertyName);
         }
+
+        public string[] Names { get; set; }
     }
 }

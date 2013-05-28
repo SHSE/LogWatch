@@ -28,7 +28,12 @@ namespace LogWatch.Features.Formats {
                 viewModel.Presets.Add(preset);
 
             viewModel.SelectedPreset = viewModel.Presets.FirstOrDefault();
-            viewModel.EditPreset = preset => ShowEditPresetDialog(stream, preset);
+
+            viewModel.EditPreset = preset => {
+                InvalidateCache(preset);
+                ShowEditPresetDialog(stream, preset, presets.Select(x => x.Name));
+            };
+
             viewModel.CreateNewPreset = () => {
                 var preset = new LexPreset {
                     Name = "New Preset",
@@ -38,12 +43,10 @@ namespace LogWatch.Features.Formats {
                         "logger    [^;\\r\\n]+\n" +
                         "message   [^;\\r\\n]+\n" +
                         "exception [^;\\r\\n]*",
-
                     SegmentCode =
                         "record {timestamp}[;]{message}[;]{logger}[;]{level}[;]{exception}\\r\\n\n" +
                         "%%\n" +
                         "{record} Segment();",
-
                     RecordCode =
                         "%x MATCHED_TIMESTAMP\n" +
                         "%x MATCHED_MESSAGE\n" +
@@ -57,7 +60,7 @@ namespace LogWatch.Features.Formats {
                         "<MATCHED_LEVEL>{exception} this.Exception = yytext; BEGIN(INITIAL);"
                 };
 
-                return ShowEditPresetDialog(stream, preset) ? preset : null;
+                return ShowEditPresetDialog(stream, preset, presets.Select(x => x.Name)) ? preset : null;
             };
 
             if (selectView.ShowDialog() != true)
@@ -89,18 +92,24 @@ namespace LogWatch.Features.Formats {
             return true;
         }
 
+        private static void InvalidateCache(LexPreset preset) {
+            var directory = GetCacheDirectory();
+            var presetAssembly = GetCachedAssembly(preset, directory);
+
+            if (presetAssembly.Exists)
+                presetAssembly.Delete();
+        }
+
         private static ILogFormat Compile(LexPreset preset) {
             var compiler = new LexCompiler();
 
-            var directory = new DirectoryInfo(
-                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "LogWatch"));
+            var directory = GetCacheDirectory();
 
             LexCompiler.LexFormatScanners result;
 
-            if (directory.Exists) {
-                var presetAssembly = new FileInfo(
-                    Path.Combine(directory.FullName, Uri.EscapeDataString(preset.Name) + ".lexpreset"));
+            var presetAssembly = GetCachedAssembly(preset, directory);
 
+            if (directory.Exists) {
                 if (presetAssembly.Exists) {
                     using (var fileStream = presetAssembly.OpenRead())
                         result = compiler.LoadCompiled(fileStream);
@@ -114,8 +123,7 @@ namespace LogWatch.Features.Formats {
             } else
                 directory.Create();
 
-            using (var fileStream =
-                File.Create(Path.Combine(directory.FullName, Uri.EscapeDataString(preset.Name) + ".lexpreset")))
+            using (var fileStream = presetAssembly.Create())
                 result = compiler.Compile(
                     string.Concat(preset.CommonCode, Environment.NewLine, preset.SegmentCode),
                     string.Concat(preset.CommonCode, Environment.NewLine, preset.RecordCode),
@@ -128,6 +136,15 @@ namespace LogWatch.Features.Formats {
                 };
 
             return null;
+        }
+
+        private static FileInfo GetCachedAssembly(LexPreset preset, DirectoryInfo directory) {
+            return new FileInfo(Path.Combine(directory.FullName, Uri.EscapeDataString(preset.Name) + ".lexpreset"));
+        }
+
+        private static DirectoryInfo GetCacheDirectory() {
+            return new DirectoryInfo(
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "LogWatch"));
         }
 
         private static ILogFormat CompileManually(Stream stream, LexPreset preset) {
@@ -146,10 +163,11 @@ namespace LogWatch.Features.Formats {
             return viewModel.Format;
         }
 
-        private static bool ShowEditPresetDialog(Stream stream, LexPreset preset) {
+        private static bool ShowEditPresetDialog(Stream stream, LexPreset preset, IEnumerable<string> names) {
             var view = new LexPresetView();
             var viewModel = view.ViewModel;
 
+            viewModel.Names = names.ToArray();
             viewModel.LogStream = stream;
             viewModel.Name = preset.Name;
             viewModel.CommonCode.Text = preset.CommonCode ?? string.Empty;
