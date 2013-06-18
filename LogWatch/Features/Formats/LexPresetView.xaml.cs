@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Reflection;
 using System.Windows.Input;
 using System.Xml;
 using ICSharpCode.AvalonEdit;
@@ -19,14 +20,14 @@ namespace LogWatch.Features.Formats {
                 (sender, args) =>
                 this.ShowCompletionWindow(
                     args,
-                    this.ViewModel.SegmentCodeCompletion, 
+                    this.ViewModel.SegmentCodeCompletion,
                     this.SegmentCodeEditor);
 
             this.RecordCodeEditor.TextArea.TextEntered +=
                 (sender, args) =>
                 this.ShowCompletionWindow(
                     args,
-                    this.ViewModel.RecordCodeCompletion, 
+                    this.ViewModel.RecordCodeCompletion,
                     this.RecordCodeEditor);
 
             this.SegmentCodeEditor.TextArea.TextEntering += this.OnTextAreaOnTextEntering;
@@ -39,7 +40,7 @@ namespace LogWatch.Features.Formats {
 
         private void ShowCompletionWindow(
             TextCompositionEventArgs args,
-            IEnumerable<LexCodeCompletionData> lexCodeCompletionDatas, 
+            IEnumerable<LexCodeCompletionData> lexCodeCompletionDatas,
             TextEditor editor) {
             if (args.Text == " " && Keyboard.IsKeyDown(Key.LeftCtrl) || args.Text == "." || args.Text == "<" ||
                 args.Text == "{") {
@@ -62,8 +63,11 @@ namespace LogWatch.Features.Formats {
         }
 
         private static void RegisterDefinition(string fileName) {
-            var definition = HighlightingLoader.Load(new XmlTextReader(fileName), HighlightingManager.Instance);
-            HighlightingManager.Instance.RegisterHighlighting(definition.Name, new string[0], definition);
+            using (var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("LogWatch." + fileName))
+                if (stream != null) {
+                    var definition = HighlightingLoader.Load(new XmlTextReader(stream), HighlightingManager.Instance);
+                    HighlightingManager.Instance.RegisterHighlighting(definition.Name, new string[0], definition);
+                }
         }
     }
 }
