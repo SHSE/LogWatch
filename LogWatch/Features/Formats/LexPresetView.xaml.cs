@@ -1,7 +1,9 @@
 ﻿using System.Collections.Generic;
 using System.Reflection;
+using System.Windows;
 using System.Windows.Input;
 using System.Xml;
+using FirstFloor.ModernUI.Windows.Controls;
 using ICSharpCode.AvalonEdit;
 using ICSharpCode.AvalonEdit.CodeCompletion;
 using ICSharpCode.AvalonEdit.Highlighting;
@@ -32,6 +34,15 @@ namespace LogWatch.Features.Formats {
 
             this.SegmentCodeEditor.TextArea.TextEntering += this.OnTextAreaOnTextEntering;
             this.RecordCodeEditor.TextArea.TextEntering += this.OnTextAreaOnTextEntering;
+
+            this.Closing += (sender, args) => {
+                var result = ShowMessage(
+                    "Are you sure you want to close the editor?", "Lex Preset",
+                    MessageBoxButton.YesNo);
+
+                if (result != true)
+                    args.Cancel = true;
+            };
         }
 
         public LexPresetViewModel ViewModel {

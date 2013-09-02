@@ -60,7 +60,7 @@ namespace LogWatch.Features.Formats {
                 "%{\n" +
                 "public override void Begin() { BEGIN(INITIAL); }\n" +
                 "public override string Text { get { return this.yytext; } }\n" +
-                "public override System.IO.Stream Source { set { this.SetSource(value); } }\n" +
+                "public override System.IO.Stream Source { set { this.SetSource(value, 65001); } }\n" +
                 "public override int Parse(System.Threading.CancellationToken ct) { int next; do { next = Scan(); } while (!ct.IsCancellationRequested && next >= parserMax); return next; }\n" +
                 "%}\n" +
                 recordScannerCode);
