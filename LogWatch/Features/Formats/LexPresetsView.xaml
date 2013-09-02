@@ -9,31 +9,45 @@
     Title="Lex Presets"
     ResizeMode="CanResize"
     SizeToContent="Manual"
-    d:DesignHeight="385"
-    d:DesignWidth="323"
+    d:DesignHeight="448"
+    d:DesignWidth="878"
     mc:Ignorable="d">
 
     <mui:ModernDialog.DataContext>
-        <formats:LexPresetsViewModel ConfirmDelete="{x:Static formats:LexPresetsView.ConfirmDelete}" />
+        <formats:LexPresetsViewModel />
     </mui:ModernDialog.DataContext>
 
     <DockPanel>
         <DockPanel DockPanel.Dock="Top" LastChildFill="False">
-            <Button Command="{Binding DeleteCommand}" Content="delete" />
             <Button
+                Command="{Binding DeleteCommand}"
+                Content="delete"
+                DockPanel.Dock="Right" />
+            <Button
+                Margin="0,0,4,0"
                 Command="{Binding NewCommand}"
                 Content="create new"
-                DockPanel.Dock="Right" />
+                DockPanel.Dock="Left" />
             <Button
                 Margin="0,0,4,0"
                 Command="{Binding EditCommand}"
                 Content="edit"
-                DockPanel.Dock="Right" />
+                DockPanel.Dock="Left" />
             <Button
                 Margin="0,0,4,0"
                 Command="{Binding DuplicateCommand}"
                 Content="duplicate"
-                DockPanel.Dock="Right" />
+                DockPanel.Dock="Left" />
+            <Button
+                Margin="0,0,4,0"
+                Command="{Binding ImportCommand}"
+                Content="import"
+                DockPanel.Dock="Left" />
+            <Button
+                Margin="0,0,4,0"
+                Command="{Binding ExportCommand}"
+                Content="export"
+                DockPanel.Dock="Left" />
         </DockPanel>
         <ListBox
             Margin="0,5,0,10"
