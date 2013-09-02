@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Reflection;
 using System.Windows;
 using System.Windows.Input;
@@ -36,7 +37,15 @@ namespace LogWatch.Features.Formats {
             this.RecordCodeEditor.TextArea.TextEntering += this.OnTextAreaOnTextEntering;
 
             this.Closing += (sender, args) => {
-                var result = ShowMessage(
+                if (this.DialogResult == true)
+                    return;
+
+                if (this.DialogResult == null) {
+                    args.Cancel = true;
+                    return;
+                }
+
+                var result = ModernDialog.ShowMessage(
                     "Are you sure you want to close the editor?", "Lex Preset",
                     MessageBoxButton.YesNo);
 
