@@ -193,7 +193,7 @@ namespace LogWatch.Features.Formats {
                     new LexCodeCompletionData("Exception"),
                     new LexCodeCompletionData("TextAsTimestamp"),
                     new LexCodeCompletionData("%x", "%x "),
-                    new LexCodeCompletionData("%%"),
+                    new LexCodeCompletionData("%%")
                 }
             }.Aggregate(Enumerable.Concat)
              .ToArray();
@@ -219,28 +219,16 @@ namespace LogWatch.Features.Formats {
 
         private async void Preview() {
             this.IsBusy = true;
+            this.IsCompiled = false;
             this.Output = "Running...";
 
-            var segmentsCode = new StringBuilder();
-            segmentsCode.AppendLine(this.CommonCode.Text);
-            segmentsCode.AppendLine();
-            segmentsCode.AppendLine(this.SegmentCode.Text);
+            var outputBuilder = new StringBuilder();
 
-            var recordsCode = new StringBuilder();
-            recordsCode.AppendLine(this.CommonCode.Text);
-            recordsCode.AppendLine();
-            recordsCode.AppendLine(this.RecordCode.Text);
-
-            var diagnostics = new StringWriter();
-
-            this.compiler.Diagnostics = diagnostics;
-
-            var scanners = await Task.Run(() => this.compiler.Compile(segmentsCode.ToString(), recordsCode.ToString()));
+            var scanners = await this.Compile(outputBuilder);
 
             if (scanners == null || scanners.RecordsScannerType == null || scanners.SegmentsScannerType == null) {
                 this.IsBusy = false;
-                this.IsCompiled = false;
-                this.Output = diagnostics.ToString();
+                this.Output = outputBuilder.ToString();
                 return;
             }
 
@@ -250,7 +238,22 @@ namespace LogWatch.Features.Formats {
             var stream = this.textStream;
 
             stream.Position = 0;
+            outputBuilder.Clear();
 
+            try {
+                this.IsCompiled = await this.Execute(stream, outputBuilder);
+            } catch {
+                this.IsBusy = false;
+                this.Output = outputBuilder.ToString();
+                throw;
+            }
+
+            this.Output = outputBuilder.ToString();
+
+            this.IsBusy = false;
+        }
+
+        private async Task<bool> Execute(Stream stream, StringBuilder outputBuilder) {
             var segments = new List<RecordSegment>();
             var cts = new CancellationTokenSource();
             var subject = new Subject<RecordSegment>();
@@ -264,11 +267,15 @@ namespace LogWatch.Features.Formats {
                 segments.Add(segment);
             });
 
-            await this.format.ReadSegments(subject, stream, cts.Token);
-
-            var outputBuilder = new StringBuilder();
+            try {
+                await this.format.ReadSegments(subject, stream, cts.Token);
+            } catch (Exception exception) {
+                outputBuilder.AppendLine(exception.ToString());
+                return false;
+            }
 
             var index = 1;
+
             foreach (var segment in segments) {
                 stream.Position = segment.Offset;
 
@@ -276,7 +283,14 @@ namespace LogWatch.Features.Formats {
 
                 await stream.ReadAsync(buffer, 0, buffer.Length);
 
-                var record = this.format.DeserializeRecord(new ArraySegment<byte>(buffer));
+                Record record;
+
+                try {
+                    record = this.format.DeserializeRecord(new ArraySegment<byte>(buffer));
+                } catch (Exception exception) {
+                    outputBuilder.AppendLine(exception.ToString());
+                    return false;
+                }
 
                 outputBuilder.AppendFormat("Record #{0}\n", index++);
 
@@ -298,10 +312,23 @@ namespace LogWatch.Features.Formats {
                 outputBuilder.AppendLine();
             }
 
-            this.Output = outputBuilder.ToString();
+            return true;
+        }
 
-            this.IsBusy = false;
-            this.IsCompiled = true;
+        private Task<LexCompiler.LexFormatScanners> Compile(StringBuilder outputBuilder) {
+            var segmentsCode = new StringBuilder();
+            segmentsCode.AppendLine(this.CommonCode.Text);
+            segmentsCode.AppendLine();
+            segmentsCode.AppendLine(this.SegmentCode.Text);
+
+            var recordsCode = new StringBuilder();
+            recordsCode.AppendLine(this.CommonCode.Text);
+            recordsCode.AppendLine();
+            recordsCode.AppendLine(this.RecordCode.Text);
+
+            this.compiler.Diagnostics = new StringWriter(outputBuilder);
+
+            return Task.Run(() => this.compiler.Compile(segmentsCode.ToString(), recordsCode.ToString()));
         }
 
         [NotifyPropertyChangedInvocator]
