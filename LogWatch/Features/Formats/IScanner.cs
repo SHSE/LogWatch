@@ -12,7 +12,8 @@ namespace LogWatch.Features.Formats {
         string Thread { get; }
 
         Action<long, int> OffsetCallback { set; }
-        Stream Source { set; }
+        void SetSourceWithEncoding(Stream source, int codePage);
+        TextWriter Diagnostics { set; }
 
         int Parse(CancellationToken cancellationToken);
         void Reset();

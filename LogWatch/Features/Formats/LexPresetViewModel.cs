@@ -24,7 +24,6 @@ namespace LogWatch.Features.Formats {
         private string logText;
         private string name;
         private string output;
-        private MemoryStream textStream;
 
         public LexPresetViewModel() {
             this.CommonCode = new TextDocument();
@@ -204,14 +203,15 @@ namespace LogWatch.Features.Formats {
 
             this.logStream.Position = 0;
 
-            using (var reader = new StreamReader(this.logStream, Encoding.UTF8, true, 4096, true)) {
+            var previewSize = 4096;
+
+            using (var reader = new StreamReader(this.logStream, Encoding.UTF8, true, previewSize, true)) {
                 var text = new StringBuilder();
 
                 for (var i = 0; i < 20 && !reader.EndOfStream; i++)
                     text.AppendLine(await reader.ReadLineAsync());
 
                 this.LogText = text.ToString();
-                this.textStream = new MemoryStream(Encoding.UTF8.GetBytes(this.logText));
             }
 
             this.IsBusy = false;
@@ -235,7 +235,7 @@ namespace LogWatch.Features.Formats {
             this.format.SegmentsScannerType = scanners.SegmentsScannerType;
             this.format.RecordsScannerType = scanners.RecordsScannerType;
 
-            var stream = this.textStream;
+            var stream = this.logStream;
 
             stream.Position = 0;
             outputBuilder.Clear();
@@ -267,6 +267,8 @@ namespace LogWatch.Features.Formats {
                 segments.Add(segment);
             });
 
+            this.format.Diagnostics = new StringWriter(outputBuilder);
+
             try {
                 await this.format.ReadSegments(subject, stream, cts.Token);
             } catch (Exception exception) {
@@ -284,7 +286,7 @@ namespace LogWatch.Features.Formats {
                 await stream.ReadAsync(buffer, 0, buffer.Length);
 
                 Record record;
-
+                
                 try {
                     record = this.format.DeserializeRecord(new ArraySegment<byte>(buffer));
                 } catch (Exception exception) {
@@ -292,7 +294,11 @@ namespace LogWatch.Features.Formats {
                     return false;
                 }
 
-                outputBuilder.AppendFormat("Record #{0}\n", index++);
+                outputBuilder.AppendFormat("Segment #{0} (offset: {1}, length: {2}): ", index, segment.Offset, segment.Length);
+                outputBuilder.Append(Encoding.UTF8.GetString(buffer));
+                outputBuilder.AppendLine();
+
+                outputBuilder.AppendFormat("Record #{0}\n", index);
 
                 if (record.Timestamp != null)
                     outputBuilder.AppendFormat("  Timestamp: {0}\n", record.Timestamp);
@@ -310,6 +316,8 @@ namespace LogWatch.Features.Formats {
                     outputBuilder.AppendFormat("  Exception: {0}\n", record.Exception);
 
                 outputBuilder.AppendLine();
+
+                index++;
             }
 
             return true;

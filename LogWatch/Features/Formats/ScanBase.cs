@@ -5,13 +5,11 @@ using System.Threading;
 
 namespace LogWatch.Features.Formats {
     public abstract class ScanBase : IScanner {
-        public abstract string Text { get; }
         public Action<long, int> OffsetCallback { get; set; }
 
         public abstract int Parse(CancellationToken cancellationToken);
 
         public abstract void Begin();
-        public abstract Stream Source { set; }
 
         public DateTime? Timestamp { get; set; }
         public string Level { get; set; }
@@ -27,14 +25,34 @@ namespace LogWatch.Features.Formats {
             this.Message = null;
             this.Exception = null;
             this.Thread = null;
+            this.Diagnostics = TextWriter.Null;
         }
 
-        public DateTime? TextAsTimestamp(string format) {
+        public abstract void SetSourceWithEncoding(Stream source, int codePage);
+
+        public TextWriter Diagnostics { get; set; }
+
+        public DateTime? TextAsTimestamp(string format, string culture = null) {
             DateTime timestamp;
 
-            DateTime.TryParseExact(this.Text, format, CultureInfo.InvariantCulture, DateTimeStyles.None, out timestamp);
+            DateTime.TryParseExact(
+                this.Text, 
+                format,
+                culture == null ? CultureInfo.InvariantCulture : CultureInfo.GetCultureInfo(culture), 
+                DateTimeStyles.None, 
+                out timestamp);
 
             return timestamp;
+        }
+
+        protected abstract string Text { get; }
+
+        protected void Debug(string format, params object[] args) {
+            this.Diagnostics.WriteLine(format, args);
+        }
+
+        protected void Debug(object obj) {
+            this.Diagnostics.WriteLine(obj);
         }
 
         protected void NextOffset(long offset, int length) {

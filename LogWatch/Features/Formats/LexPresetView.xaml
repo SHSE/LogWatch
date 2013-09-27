@@ -165,7 +165,7 @@
 
         <TextBox
             MinWidth="200"
-            Margin="39,0,0,0"
+            Margin="41,0,0,0"
             HorizontalAlignment="Left"
             Text="{Binding Name}" />
 

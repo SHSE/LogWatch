@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -24,13 +25,19 @@ namespace LogWatch.Features.Formats {
         }
 
         public TaskScheduler TaskScheduler { get; set; }
+        public TextWriter Diagnostics { get; set; }
 
         public Record DeserializeRecord(ArraySegment<byte> segment) {
             var scanner = this.recordsScanner.Value;
 
             scanner.Begin();
             scanner.Reset();
-            scanner.Source = new MemoryStream(segment.Array, segment.Offset, segment.Count);
+            scanner.Diagnostics = this.Diagnostics ?? TextWriter.Null;
+
+            scanner.SetSourceWithEncoding(
+                new MemoryStream(segment.Array, segment.Offset, segment.Count),
+                Encoding.UTF8.CodePage);
+
             scanner.Parse(CancellationToken.None);
 
             return new Record {
@@ -60,7 +67,12 @@ namespace LogWatch.Features.Formats {
                     }
                 };
 
-                scanner.Source = new InternalStreamWrapper(stream, stream.Position);
+                scanner.Diagnostics = this.Diagnostics ?? TextWriter.Null;
+                
+                scanner.SetSourceWithEncoding(
+                    new InternalStreamWrapper(stream, stream.Position),
+                    Encoding.UTF8.CodePage);
+
                 scanner.Parse(cancellationToken);
 
                 return lastOffset;

@@ -60,8 +60,8 @@
     <Keywords foreground="LightCoral">
       <Word>INITIAL</Word>
       <Word>BEGIN</Word>
-      <Word>Segment</Word>
-      <Word>Text</Word>
+      <Word>BeginSegment</Word>
+      <Word>EndSegment</Word>
       <Word>yytext</Word>
     </Keywords>
   </RuleSet>
