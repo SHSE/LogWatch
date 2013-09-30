@@ -174,7 +174,6 @@
     <Compile Include="Features\Records\GoToIndexEventArgs.cs" />
     <Compile Include="Features\Records\TimestampFormat.cs" />
     <Compile Include="Features\Records\VisibleItemsInfo.cs" />
-    <Compile Include="Features\Records\VisibleItemsInfoBehaviour.cs" />
     <Compile Include="Features\Records\SelectItemByIndexAction.cs" />
     <Compile Include="Features\Search\SearchView.xaml.cs">
       <DependentUpon>SearchView.xaml</DependentUpon>
