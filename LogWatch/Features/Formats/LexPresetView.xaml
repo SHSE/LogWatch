@@ -14,7 +14,7 @@
     Width="900"
     Height="620"
     Background="{DynamicResource WindowBackground}"
-    Icon="..\..\App.ico"
+    Icon="/LogWatch;component/App.ico"
     Style="{StaticResource CompactWindow}"
     mc:Ignorable="d">
 

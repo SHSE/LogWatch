@@ -4,7 +4,6 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:core="clr-namespace:Microsoft.Expression.Interactivity.Core;assembly=Microsoft.Expression.Interactions"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:ei="http://schemas.microsoft.com/expression/2010/interactions"
     xmlns:feature="clr-namespace:LogWatch.Features.Records"
     xmlns:i="clr-namespace:System.Windows.Interactivity;assembly=System.Windows.Interactivity"
     xmlns:local="clr-namespace:LogWatch"
@@ -96,6 +95,7 @@
             ItemsSource="{Binding Records}"
             ScrollViewer.HorizontalScrollBarVisibility="Disabled"
             ScrollViewer.IsDeferredScrollingEnabled="True"
+            SelectedItem="{Binding SelectedRecord}"
             SelectionMode="Single"
             SizeChanged="Records_OnSizeChanged"
             VirtualizingPanel.CacheLength="20"
@@ -104,14 +104,9 @@
 
             <i:Interaction.Behaviors>
                 <feature:AutoScrollToEndBehaviour IsEnabled="{Binding AutoScroll, Mode=TwoWay}" />
-                <feature:VisibleItemsInfoBehaviour VisibleItems="{Binding RecordContext, Mode=OneWayToSource}" />
             </i:Interaction.Behaviors>
 
             <i:Interaction.Triggers>
-                <i:EventTrigger EventName="SelectionChanged">
-                    <i:InvokeCommandAction Command="{Binding SelectRecordCommand}" CommandParameter="{Binding SelectedItem, RelativeSource={RelativeSource FindAncestor, ListView, 1}}" />
-                </i:EventTrigger>
-
                 <i:EventTrigger EventName="Navigated" SourceObject="{Binding}">
                     <feature:SelectItemByIndexAction />
                 </i:EventTrigger>

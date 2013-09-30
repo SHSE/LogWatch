@@ -31,7 +31,7 @@ namespace LogWatch.Features.Stats {
             this.CollectCommand = new RelayCommand(this.Collect);
             this.GoToNextCommand = new RelayCommand<LogLevel>(this.GoToNext);
 
-            this.MessengerInstance.Register<RecordContextChangedMessage>(this, this.OnRecordContextChanged);
+            this.MessengerInstance.Register<RecordSelectedMessage>(this, this.OnRecordSelected);
         }
 
         public bool IsColllecting {
@@ -62,12 +62,15 @@ namespace LogWatch.Features.Stats {
         public IScheduler Scheduler { get; set; }
         public LogSourceInfo LogSourceInfo { get; set; }
 
-        private void Set<T>(ref T field, T newValue, [CallerMemberName] string propertyName = null) {
-            this.Set(propertyName, ref field, newValue, false);
+        private void OnRecordSelected(RecordSelectedMessage message) {
+            if (message.Record != null)
+                this.lastRecordIndex = message.Record.Index;
+            else
+                this.lastRecordIndex = -1;
         }
 
-        private void OnRecordContextChanged(RecordContextChangedMessage message) {
-            this.lastRecordIndex = message.ToRecord.Index;
+        private void Set<T>(ref T field, T newValue, [CallerMemberName] string propertyName = null) {
+            this.Set(propertyName, ref field, newValue, false);
         }
 
         private void GoToNext(LogLevel level) {

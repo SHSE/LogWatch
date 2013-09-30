@@ -10,7 +10,7 @@
     Title="Lex Presets"
     Width="563"
     Height="400"
-    Icon="..\..\App.ico"
+    Icon="/LogWatch;component/App.ico"
     Style="{StaticResource CompactWindow}"
     mc:Ignorable="d">
 

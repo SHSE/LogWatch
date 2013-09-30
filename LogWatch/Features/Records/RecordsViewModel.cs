@@ -14,6 +14,7 @@ namespace LogWatch.Features.Records {
         private bool autoScroll;
         private bool isFilterActive;
         private RecordCollection records;
+        private Record selectedRecord;
         private TimestampFormat timestampFormat;
 
         public RecordsViewModel() {
@@ -21,7 +22,6 @@ namespace LogWatch.Features.Records {
                 return;
 
             this.Scheduler = System.Reactive.Concurrency.Scheduler.Default;
-            this.SelectRecordCommand = new RelayCommand<Record>(this.SelectRecord);
             this.SetTimestampFormatCommand = new RelayCommand<TimestampFormat>(format => this.TimestampFormat = format);
 
             this.MessengerInstance.Register<NavigatedToRecordMessage>(this, this.OnNavigateToRecord);
@@ -38,25 +38,6 @@ namespace LogWatch.Features.Records {
             set { this.Set(ref this.autoScroll, value); }
         }
 
-        public RelayCommand<Record> SelectRecordCommand { get; set; }
-
-        public IObservable<VisibleItemsInfo> RecordContext {
-            set {
-                if (value == null)
-                    return;
-
-                value.Where(x => x.FirstItem != null && x.LastItem != null)
-                     .Sample(TimeSpan.FromMilliseconds(300), this.Scheduler)
-                     .ObserveOn(new SynchronizationContextScheduler(SynchronizationContext.Current))
-                     .Subscribe(
-                         info =>
-                         this.MessengerInstance.Send(
-                             new RecordContextChangedMessage(
-                             (Record) info.FirstItem,
-                             (Record) info.LastItem)));
-            }
-        }
-
         public IScheduler Scheduler { get; set; }
         public LogSourceInfo LogSourceInfo { get; set; }
 
@@ -66,6 +47,14 @@ namespace LogWatch.Features.Records {
         }
 
         public RelayCommand<TimestampFormat> SetTimestampFormatCommand { get; set; }
+
+        public Record SelectedRecord {
+            get { return this.selectedRecord; }
+            set {
+                if (this.Set(ref this.selectedRecord, value))
+                    this.MessengerInstance.Send(new RecordSelectedMessage(value));
+            }
+        }
 
         private void OnFilterChanged(RecordFilterChangedMessage message) {
             var oldCollection = this.records;
@@ -88,12 +77,8 @@ namespace LogWatch.Features.Records {
             this.Records = newCollection;
         }
 
-        private void Set<T>(ref T field, T newValue, [CallerMemberName] string propertyName = null) {
-            this.Set(propertyName, ref field, newValue, false);
-        }
-
-        private void SelectRecord(Record record) {
-            this.MessengerInstance.Send(new RecordSelectedMessage(record));
+        private bool Set<T>(ref T field, T newValue, [CallerMemberName] string propertyName = null) {
+            return this.Set(propertyName, ref field, newValue, false);
         }
 
         public void Initialize() {

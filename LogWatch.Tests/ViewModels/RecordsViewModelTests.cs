@@ -1,5 +1,4 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Threading;
@@ -43,7 +42,7 @@ namespace LogWatch.Tests.ViewModels {
 
         [Fact]
         public void SelectsRecord() {
-            this.viewModel.SelectRecordCommand.Execute(new Record {Index = 1});
+            this.viewModel.SelectedRecord = new Record {Index = 1};
 
             var message = this.testMessenger.SentMessages.OfType<RecordSelectedMessage>().Single();
 
@@ -59,25 +58,6 @@ namespace LogWatch.Tests.ViewModels {
             this.testMessenger.Send(new NavigatedToRecordMessage(7));
 
             Assert.Equal(7, recordIndex);
-        }
-
-        [Fact]
-        public void ReportsCurrentRecordContext() {
-            RecordContextChangedMessage message = null;
-
-            this.testMessenger.Register<RecordContextChangedMessage>(this, x => message = x);
-
-            var context = new Subject<VisibleItemsInfo>();
-
-            this.viewModel.RecordContext = context.ObserveOn(this.testScheduler);
-
-            context.OnNext(new VisibleItemsInfo(new Record {Index = 7}, new Record {Index = 23}));
-
-            this.testScheduler.AdvanceBy(TimeSpan.FromMinutes(5).Ticks);
-
-            Assert.NotNull(message);
-            Assert.Equal(7, message.FromRecord.Index);
-            Assert.Equal(23, message.ToRecord.Index);
         }
     }
 }
