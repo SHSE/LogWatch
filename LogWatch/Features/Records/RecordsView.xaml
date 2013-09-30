@@ -2,6 +2,7 @@
     x:Class="LogWatch.Features.Records.RecordsView"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:core="clr-namespace:Microsoft.Expression.Interactivity.Core;assembly=Microsoft.Expression.Interactions"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:ei="http://schemas.microsoft.com/expression/2010/interactions"
     xmlns:feature="clr-namespace:LogWatch.Features.Records"
@@ -116,7 +117,7 @@
                 </i:EventTrigger>
 
                 <i:EventTrigger EventName="Loaded">
-                    <ei:CallMethodAction MethodName="Initialize" TargetObject="{Binding}" />
+                    <core:CallMethodAction MethodName="Initialize" TargetObject="{Binding}" />
                 </i:EventTrigger>
             </i:Interaction.Triggers>
 
