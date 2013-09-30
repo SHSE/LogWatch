@@ -1,14 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Reflection;
-using System.Windows;
 using System.Windows.Input;
 using System.Xml;
-using FirstFloor.ModernUI.Windows.Controls;
 using ICSharpCode.AvalonEdit;
 using ICSharpCode.AvalonEdit.CodeCompletion;
 using ICSharpCode.AvalonEdit.Highlighting;
 using ICSharpCode.AvalonEdit.Highlighting.Xshd;
+using LogWatch.Controls;
 
 namespace LogWatch.Features.Formats {
     public partial class LexPresetView {
@@ -36,21 +34,26 @@ namespace LogWatch.Features.Formats {
             this.SegmentCodeEditor.TextArea.TextEntering += this.OnTextAreaOnTextEntering;
             this.RecordCodeEditor.TextArea.TextEntering += this.OnTextAreaOnTextEntering;
 
+            this.ViewModel.EditCompleted = () => {
+                DialogResult = true;
+                this.Close();
+            };
+
             this.Closing += (sender, args) => {
                 if (this.DialogResult == true)
                     return;
 
-                if (this.DialogResult == null) {
-                    args.Cancel = true;
-                    return;
+                if (this.ViewModel.IsChanged) {
+                    var result = CustomModernDialog.ShowMessage(
+                        "Do you want to close the editor and discard all the changes?",
+                        "Lex Preset",
+                        this,
+                        new ButtonDef("nosave", "dicard changes"),
+                        new ButtonDef("cancel", "cancel", isCancel: true));
+
+                    if (result == "cancel")
+                        args.Cancel = true;
                 }
-
-                var result = ModernDialog.ShowMessage(
-                    "Are you sure you want to close the editor?", "Lex Preset",
-                    MessageBoxButton.YesNo);
-
-                if (result != true)
-                    args.Cancel = true;
             };
         }
 

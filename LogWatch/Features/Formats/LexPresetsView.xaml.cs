@@ -1,4 +1,4 @@
-﻿using System.Windows;
+﻿using LogWatch.Controls;
 using Microsoft.Win32;
 
 namespace LogWatch.Features.Formats {
@@ -6,8 +6,10 @@ namespace LogWatch.Features.Formats {
         public LexPresetsView() {
             this.InitializeComponent();
 
-            this.Buttons = new[] {this.OkButton, this.CancelButton};
-            this.OkButton.Content = "select";
+            this.ViewModel.SelectionCompleted = () => {
+                this.DialogResult = true;
+                this.Close();
+            };
 
             this.ViewModel.SelectFileForImport = () => {
                 var dialog = new OpenFileDialog {
@@ -33,7 +35,16 @@ namespace LogWatch.Features.Formats {
                 return null;
             };
 
-            this.ViewModel.ConfirmDelete = () => ShowMessage("Are you sure?", "Delete", MessageBoxButton.YesNo) == true;
+            this.ViewModel.ConfirmDelete = preset => {
+                var result = CustomModernDialog.ShowMessage(
+                    string.Format("Are you sure you want to delete preset \"{0}\"?", preset.Name),
+                    "Lex Presets",
+                    this,
+                    new ButtonDef("delete", "delete preset"),
+                    ButtonDef.Cancel);
+
+                return result == "delete";
+            };
         }
 
         public LexPresetsViewModel ViewModel {

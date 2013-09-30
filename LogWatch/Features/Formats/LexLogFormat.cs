@@ -60,7 +60,7 @@ namespace LogWatch.Features.Formats {
                 var lastOffset = initialOffset;
 
                 scanner.OffsetCallback = (offset, length) => {
-                    if (length > 0) {
+                    if (length > 0 && offset >= 0) {
                         var segment = new RecordSegment(initialOffset + offset, length);
                         lastOffset = initialOffset + offset + length;
                         observer.OnNext(segment);

@@ -24,6 +24,7 @@ namespace LogWatch.Features.Formats {
         private string logText;
         private string name;
         private string output;
+        private bool isChanged;
 
         public LexPresetViewModel() {
             this.CommonCode = new TextDocument();
@@ -35,21 +36,28 @@ namespace LogWatch.Features.Formats {
 
             this.CommonCode.TextChanged += (sender, args) => {
                 this.IsCompiled = false;
+                this.IsChanged = true;
                 this.SegmentCodeCompletion = this.CreateCodeCompletion(this.SegmentCode.Text);
                 this.RecordCodeCompletion = this.CreateCodeCompletion(this.RecordCode.Text);
             };
 
             this.SegmentCode.TextChanged += (sender, args) => {
                 this.IsCompiled = false;
+                this.IsChanged = true;
                 this.SegmentCodeCompletion = this.CreateCodeCompletion(this.SegmentCode.Text);
             };
 
             this.RecordCode.TextChanged += (sender, args) => {
                 this.IsCompiled = false;
+                this.IsChanged = true;
                 this.RecordCodeCompletion = this.CreateCodeCompletion(this.RecordCode.Text);
             };
 
             this.RunCommand = new RelayCommand(this.Preview, () => this.isBusy == false);
+
+            this.SaveAndCloseCommand = new RelayCommand(
+                () => EditCompleted(), 
+                () => this.IsCompiled && !this.IsBusy);
 
             if (this.IsInDesignMode) {
                 this.Name = "Test preset";
@@ -86,8 +94,20 @@ namespace LogWatch.Features.Formats {
             this.Name = "(Current Preset)";
         }
 
+        public Action EditCompleted { get; set; }
+
         public IReadOnlyCollection<LexCodeCompletionData> RecordCodeCompletion { get; private set; }
         public IReadOnlyCollection<LexCodeCompletionData> SegmentCodeCompletion { get; private set; }
+
+        public bool IsChanged {
+            get { return this.isChanged; }
+            set {
+                if (value.Equals(this.isChanged))
+                    return;
+                this.isChanged = value;
+                this.OnPropertyChanged();
+            }
+        }
 
         public LexLogFormat Format {
             get { return this.format; }
@@ -144,6 +164,7 @@ namespace LogWatch.Features.Formats {
                 if (value.Equals(this.isCompiled))
                     return;
                 this.isCompiled = value;
+                this.SaveAndCloseCommand.RaiseCanExecuteChanged();
                 this.OnPropertyChanged();
             }
         }
@@ -156,6 +177,7 @@ namespace LogWatch.Features.Formats {
                 if (value == this.name)
                     return;
                 this.name = value;
+                this.IsChanged = true;
                 this.OnPropertyChanged();
             }
         }
@@ -345,5 +367,7 @@ namespace LogWatch.Features.Formats {
         }
 
         public string[] Names { get; set; }
+
+        public RelayCommand SaveAndCloseCommand { get;  set; }
     }
 }

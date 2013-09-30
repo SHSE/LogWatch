@@ -1,39 +1,55 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Reactive.Subjects;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 using LogWatch.Features.Formats;
 using Xunit;
-using System.Reactive.Linq;
-using System.Reactive.Threading.Tasks;
 
 namespace LogWatch.Tests.Formats {
     public class LexFormatTests {
-        [Fact(Timeout = 60000)]
+        [Fact]
         public void ReadsSegments() {
             var stream = CreateStream("01.01.2012T15:41:23 DEBUG Hello world!\r\n02.01.2012T10:23:03 WARN Bye bye!");
-            const string lex = @"
-                timestamp   [0-9]{2}[.][0-9]{2}[.][0-9]{4}[T][0-9]{2}[:][0-9]{2}[:][0-9]{2}
-                level       TRACE|DEBUG|INFO|WARN|ERROR|FATAL
-                message     [^\r\n]+
 
-                record      {timestamp}[ ]{level}[ ]{message}\r\n
+            const string lex = @"
+                start   [0-9]{2}[.][0-9]{2}[.][0-9]{4}[T][0-9]{2}[:][0-9]{2}[:][0-9]{2}
+                end     \r\n
                 %%
-                {record} Segment();
+                {start} BeginSegment();
+                {end} EndSegment();
+                <<EOF>> EndSegment();
                 ";
 
             var compiler = new LexCompiler {Diagnostics = Console.Out};
 
             var scanners = compiler.Compile(lex, "%%");
 
-            var format = new LexLogFormat {SegmentsScannerType = scanners.SegmentsScannerType};
+            Assert.True(scanners.Success);
 
-            var subject = new ReplaySubject<RecordSegment>();
+            var taskScheduler = new TestTaskScheduler();
 
-            format.ReadSegments(subject, stream, CancellationToken.None).Wait();
+            var format = new LexLogFormat {
+                SegmentsScannerType = scanners.SegmentsScannerType,
+                Diagnostics = Console.Out,
+                TaskScheduler = taskScheduler
+            };
 
-            var segment = subject.FirstAsync().ToTask().Result;
+            var segments = new List<RecordSegment>();
+            var subject = new Subject<RecordSegment>();
+
+            subject.Subscribe(segments.Add);
+
+            format.ReadSegments(subject, stream, CancellationToken.None);
+
+            taskScheduler.ExecuteAll();
+
+            var segment = segments.FirstOrDefault();
+
+            Assert.NotNull(segment);
 
             stream.Position = segment.Offset;
 
@@ -43,7 +59,7 @@ namespace LogWatch.Tests.Formats {
 
             var str = Encoding.UTF8.GetString(buffer);
 
-            Assert.Equal("01.01.2012T15:41:23 DEBUG Hello world!\r\n", str);
+            Assert.Equal("01.01.2012T15:41:23 DEBUG Hello world!", str);
         }
 
         [Fact]
@@ -64,13 +80,18 @@ namespace LogWatch.Tests.Formats {
                 ";
 
             var compiler = new LexCompiler {Diagnostics = Console.Out};
-
             var scanners = compiler.Compile("%%", lex);
-            
-            var format = new LexLogFormat {RecordsScannerType = scanners.RecordsScannerType};
+            var taskScheduler = new TestTaskScheduler();
+
+            var format = new LexLogFormat {
+                RecordsScannerType = scanners.RecordsScannerType,
+                TaskScheduler = taskScheduler
+            };
 
             var record = format.DeserializeRecord(
                 new ArraySegment<byte>(Encoding.UTF8.GetBytes("01.01.2012T15:41:23 DEBUG Hello world!\r\n")));
+
+            taskScheduler.ExecuteAll();
 
             Assert.Equal(LogLevel.Debug, record.Level);
             Assert.Equal(" Hello world!", record.Message);
@@ -80,6 +101,27 @@ namespace LogWatch.Tests.Formats {
             var bytes = Encoding.UTF8.GetBytes(content);
             var stream = new MemoryStream(bytes);
             return stream;
-        } 
+        }
+
+        private class TestTaskScheduler : TaskScheduler {
+            private readonly Queue<Task> tasks = new Queue<Task>();
+
+            protected override void QueueTask(Task task) {
+                this.tasks.Enqueue(task);
+            }
+
+            protected override bool TryExecuteTaskInline(Task task, bool taskWasPreviouslyQueued) {
+                return this.TryExecuteTask(task);
+            }
+
+            protected override IEnumerable<Task> GetScheduledTasks() {
+                return this.tasks;
+            }
+
+            public void ExecuteAll() {
+                while (this.tasks.Count > 0)
+                    this.TryExecuteTask(this.tasks.Dequeue());
+            }
+        }
     }
 }

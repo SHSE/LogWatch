@@ -11,8 +11,14 @@ namespace LogWatch.Features.Formats {
     public class LexPresetsViewModel : ViewModelBase {
         private LexPreset selectedPreset;
 
+        public Action SelectionCompleted { get; set; }
+
         public LexPresetsViewModel() {
             this.Presets = new ObservableCollection<LexPreset>();
+
+            this.SelectCommand = new RelayCommand(
+                () => SelectionCompleted(), 
+                () => this.SelectedPreset != null);
 
             this.NewCommand = new RelayCommand(() => {
                 var preset = this.CreateNewPreset();
@@ -43,7 +49,7 @@ namespace LogWatch.Features.Formats {
 
             this.DeleteCommand = new RelayCommand(
                 () => {
-                    if (this.ConfirmDelete())
+                    if (this.ConfirmDelete(this.selectedPreset))
                         this.Presets.Remove(this.selectedPreset);
                 },
                 () => this.selectedPreset != null);
@@ -99,7 +105,7 @@ namespace LogWatch.Features.Formats {
             }
         }
 
-        public Func<bool> ConfirmDelete { get; set; }
+        public Func<LexPreset, bool> ConfirmDelete { get; set; }
         public Func<LexPreset> CreateNewPreset { get; set; }
         public Action<LexPreset> EditPreset { get; set; }
 
@@ -116,6 +122,7 @@ namespace LogWatch.Features.Formats {
                 this.DuplicateCommand.RaiseCanExecuteChanged();
                 this.DeleteCommand.RaiseCanExecuteChanged();
                 this.ExportCommand.RaiseCanExecuteChanged();
+                this.SelectCommand.RaiseCanExecuteChanged();
             }
         }
 
@@ -130,5 +137,7 @@ namespace LogWatch.Features.Formats {
         private void OnPropertyChanged([CallerMemberName] string propertyName = null) {
             base.RaisePropertyChanged(propertyName);
         }
+
+        public RelayCommand SelectCommand { get; set; }
     }
 }
